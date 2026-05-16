@@ -7,7 +7,7 @@ export const idl = require("./idl.json");
 
 export const PROGRAM_ID = new PublicKey(idl.address);
 export const RPC_URL = process.env.RPC_URL?.trim() || "https://api.devnet.solana.com";
-export const BASKET_SEED = Buffer.from("basket");
+export const BASKET_SEED = Buffer.from("basket-v2");
 export const PYTH_RECEIVER = new PublicKey("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
 // Pyth feed ids (hex, no 0x) — the ONE place these live. SOL/USD, JUP/USD, USDC/USD.

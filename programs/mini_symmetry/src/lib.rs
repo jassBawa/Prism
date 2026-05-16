@@ -14,7 +14,7 @@ declare_id!("8TrJeQaHV4yXgPkNeZXR1pdWbEMXvnpLMYZpk1qX3jbe");
 
 pub const NUM_ASSETS: usize = 3;
 pub const USDC_INDEX: usize = 2;
-pub const BASKET_SEED: &[u8] = b"basket";
+pub const BASKET_SEED: &[u8] = b"basket-v2";
 pub const BASKET_DECIMALS: u8 = 6;
 pub const BPS: u128 = 10_000;
 pub const PRICE_MAX_AGE_SECS: u64 = 60;
@@ -109,7 +109,7 @@ pub mod mini_symmetry {
         // Pull USDC user -> vault.
         token::transfer(
             CpiContext::new(
-                ctx.accounts.token_program.key(),
+                ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.depositor_usdc.to_account_info(),
                     to: ctx.accounts.vault_usdc.to_account_info(),
@@ -123,7 +123,7 @@ pub mod mini_symmetry {
         let seeds: &[&[u8]] = &[BASKET_SEED, &[ctx.accounts.basket.bump]];
         token::mint_to(
             CpiContext::new_with_signer(
-                ctx.accounts.token_program.key(),
+                ctx.accounts.token_program.to_account_info(),
                 MintTo {
                     mint: ctx.accounts.basket_mint.to_account_info(),
                     to: ctx.accounts.depositor_basket.to_account_info(),
@@ -174,7 +174,7 @@ pub mod mini_symmetry {
             }
             token::transfer(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_program.key(),
+                    ctx.accounts.token_program.to_account_info(),
                     Transfer { from: vaults[i].clone(), to: user_atas[i].clone(), authority: ctx.accounts.basket.to_account_info() },
                     &[seeds],
                 ),
@@ -184,7 +184,7 @@ pub mod mini_symmetry {
 
         token::burn(
             CpiContext::new(
-                ctx.accounts.token_program.key(),
+                ctx.accounts.token_program.to_account_info(),
                 Burn { mint: ctx.accounts.basket_mint.to_account_info(), from: ctx.accounts.user_basket.to_account_info(), authority: ctx.accounts.user.to_account_info() },
             ),
             basket_amount,
@@ -274,7 +274,7 @@ pub mod mini_symmetry {
                 // reserve -> vault (asset i); keeper authorizes its own reserve.
                 token::transfer(
                     CpiContext::new(
-                        ctx.accounts.token_program.key(),
+                        ctx.accounts.token_program.to_account_info(),
                         Transfer { from: reserves[i].clone(), to: vaults[i].clone(), authority: ctx.accounts.keeper.to_account_info() },
                     ),
                     delta_amount,
@@ -282,7 +282,7 @@ pub mod mini_symmetry {
                 // vault USDC -> reserve USDC; PDA authorizes.
                 token::transfer(
                     CpiContext::new_with_signer(
-                        ctx.accounts.token_program.key(),
+                        ctx.accounts.token_program.to_account_info(),
                         Transfer { from: vaults[USDC_INDEX].clone(), to: reserves[USDC_INDEX].clone(), authority: ctx.accounts.basket.to_account_info() },
                         &[seeds],
                     ),
@@ -298,7 +298,7 @@ pub mod mini_symmetry {
                 // vault -> reserve (asset i); PDA authorizes.
                 token::transfer(
                     CpiContext::new_with_signer(
-                        ctx.accounts.token_program.key(),
+                        ctx.accounts.token_program.to_account_info(),
                         Transfer { from: vaults[i].clone(), to: reserves[i].clone(), authority: ctx.accounts.basket.to_account_info() },
                         &[seeds],
                     ),
@@ -307,7 +307,7 @@ pub mod mini_symmetry {
                 // reserve USDC -> vault USDC; keeper authorizes.
                 token::transfer(
                     CpiContext::new(
-                        ctx.accounts.token_program.key(),
+                        ctx.accounts.token_program.to_account_info(),
                         Transfer { from: reserves[USDC_INDEX].clone(), to: vaults[USDC_INDEX].clone(), authority: ctx.accounts.keeper.to_account_info() },
                     ),
                     delta_value as u64,
@@ -443,25 +443,25 @@ pub struct InitializeBasket<'info> {
         seeds = [BASKET_SEED],
         bump
     )]
-    pub basket: Account<'info, Basket>,
+    pub basket: Box<Account<'info, Basket>>,
     #[account(
         init,
         payer = authority,
         mint::decimals = BASKET_DECIMALS,
         mint::authority = basket,
     )]
-    pub basket_mint: Account<'info, Mint>,
+    pub basket_mint: Box<Account<'info, Mint>>,
 
-    pub sol_mint: Account<'info, Mint>,
-    pub jup_mint: Account<'info, Mint>,
-    pub usdc_mint: Account<'info, Mint>,
+    pub sol_mint: Box<Account<'info, Mint>>,
+    pub jup_mint: Box<Account<'info, Mint>>,
+    pub usdc_mint: Box<Account<'info, Mint>>,
 
     #[account(init, payer = authority, associated_token::mint = sol_mint, associated_token::authority = basket)]
-    pub vault_sol: Account<'info, TokenAccount>,
+    pub vault_sol: Box<Account<'info, TokenAccount>>,
     #[account(init, payer = authority, associated_token::mint = jup_mint, associated_token::authority = basket)]
-    pub vault_jup: Account<'info, TokenAccount>,
+    pub vault_jup: Box<Account<'info, TokenAccount>>,
     #[account(init, payer = authority, associated_token::mint = usdc_mint, associated_token::authority = basket)]
-    pub vault_usdc: Account<'info, TokenAccount>,
+    pub vault_usdc: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -472,22 +472,22 @@ pub struct InitializeBasket<'info> {
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(seeds = [BASKET_SEED], bump = basket.bump)]
-    pub basket: Account<'info, Basket>,
+    pub basket: Box<Account<'info, Basket>>,
     #[account(mut, address = basket.basket_mint)]
-    pub basket_mint: Account<'info, Mint>,
+    pub basket_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub depositor: Signer<'info>,
     #[account(mut, token::mint = basket.assets[USDC_INDEX].mint, token::authority = depositor)]
-    pub depositor_usdc: Account<'info, TokenAccount>,
+    pub depositor_usdc: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.basket_mint, token::authority = depositor)]
-    pub depositor_basket: Account<'info, TokenAccount>,
+    pub depositor_basket: Box<Account<'info, TokenAccount>>,
 
     #[account(mut, associated_token::mint = basket.assets[0].mint, associated_token::authority = basket)]
-    pub vault_sol: Account<'info, TokenAccount>,
+    pub vault_sol: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[1].mint, associated_token::authority = basket)]
-    pub vault_jup: Account<'info, TokenAccount>,
+    pub vault_jup: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[USDC_INDEX].mint, associated_token::authority = basket)]
-    pub vault_usdc: Account<'info, TokenAccount>,
+    pub vault_usdc: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Pyth price update account, validated in the handler.
     pub price_sol: UncheckedAccount<'info>,
@@ -502,27 +502,27 @@ pub struct Deposit<'info> {
 #[derive(Accounts)]
 pub struct Withdraw<'info> {
     #[account(seeds = [BASKET_SEED], bump = basket.bump)]
-    pub basket: Account<'info, Basket>,
+    pub basket: Box<Account<'info, Basket>>,
     #[account(mut, address = basket.basket_mint)]
-    pub basket_mint: Account<'info, Mint>,
+    pub basket_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut, token::mint = basket.basket_mint, token::authority = user)]
-    pub user_basket: Account<'info, TokenAccount>,
+    pub user_basket: Box<Account<'info, TokenAccount>>,
 
     #[account(mut, associated_token::mint = basket.assets[0].mint, associated_token::authority = basket)]
-    pub vault_sol: Account<'info, TokenAccount>,
+    pub vault_sol: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[1].mint, associated_token::authority = basket)]
-    pub vault_jup: Account<'info, TokenAccount>,
+    pub vault_jup: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[USDC_INDEX].mint, associated_token::authority = basket)]
-    pub vault_usdc: Account<'info, TokenAccount>,
+    pub vault_usdc: Box<Account<'info, TokenAccount>>,
 
     #[account(mut, token::mint = basket.assets[0].mint, token::authority = user)]
-    pub user_sol: Account<'info, TokenAccount>,
+    pub user_sol: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.assets[1].mint, token::authority = user)]
-    pub user_jup: Account<'info, TokenAccount>,
+    pub user_jup: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.assets[USDC_INDEX].mint, token::authority = user)]
-    pub user_usdc: Account<'info, TokenAccount>,
+    pub user_usdc: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -530,23 +530,23 @@ pub struct Withdraw<'info> {
 #[derive(Accounts)]
 pub struct Rebalance<'info> {
     #[account(mut, seeds = [BASKET_SEED], bump = basket.bump)]
-    pub basket: Account<'info, Basket>,
+    pub basket: Box<Account<'info, Basket>>,
     #[account(mut)]
     pub keeper: Signer<'info>,
 
     #[account(mut, associated_token::mint = basket.assets[0].mint, associated_token::authority = basket)]
-    pub vault_sol: Account<'info, TokenAccount>,
+    pub vault_sol: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[1].mint, associated_token::authority = basket)]
-    pub vault_jup: Account<'info, TokenAccount>,
+    pub vault_jup: Box<Account<'info, TokenAccount>>,
     #[account(mut, associated_token::mint = basket.assets[USDC_INDEX].mint, associated_token::authority = basket)]
-    pub vault_usdc: Account<'info, TokenAccount>,
+    pub vault_usdc: Box<Account<'info, TokenAccount>>,
 
     #[account(mut, token::mint = basket.assets[0].mint, token::authority = keeper)]
-    pub reserve_sol: Account<'info, TokenAccount>,
+    pub reserve_sol: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.assets[1].mint, token::authority = keeper)]
-    pub reserve_jup: Account<'info, TokenAccount>,
+    pub reserve_jup: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.assets[USDC_INDEX].mint, token::authority = keeper)]
-    pub reserve_usdc: Account<'info, TokenAccount>,
+    pub reserve_usdc: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Pyth price update account, validated in the handler.
     pub price_sol: UncheckedAccount<'info>,
@@ -561,7 +561,7 @@ pub struct Rebalance<'info> {
 #[derive(Accounts)]
 pub struct AdminOnly<'info> {
     #[account(mut, seeds = [BASKET_SEED], bump = basket.bump, has_one = authority @ MsError::Unauthorized)]
-    pub basket: Account<'info, Basket>,
+    pub basket: Box<Account<'info, Basket>>,
     pub authority: Signer<'info>,
 }
 

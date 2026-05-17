@@ -14,371 +14,24 @@ export type MiniSymmetry = {
   },
   "instructions": [
     {
-      "name": "deposit",
+      "name": "createBasket",
       "docs": [
-        "Deposit USDC, receive basket tokens priced by NAV (before this deposit)."
+        "Create a basket from `num_assets` supported assets + target weights.",
+        "`remaining_accounts`: for each asset i, the triple [mint_i, supported_i, vault_i]."
       ],
       "discriminator": [
-        242,
-        35,
-        198,
-        137,
-        82,
-        225,
-        242,
-        182
+        47,
+        105,
+        155,
+        148,
+        15,
+        169,
+        202,
+        211
       ],
       "accounts": [
         {
-          "name": "basket",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116,
-                  45,
-                  118,
-                  50
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "name": "basketMint",
-          "writable": true
-        },
-        {
-          "name": "depositor",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "depositorUsdc",
-          "writable": true
-        },
-        {
-          "name": "depositorBasket",
-          "writable": true
-        },
-        {
-          "name": "vaultSol",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [0].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultJup",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [1].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultUsdc",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [USDC_INDEX].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "priceSol"
-        },
-        {
-          "name": "priceJup"
-        },
-        {
-          "name": "priceUsdc"
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        }
-      ],
-      "args": [
-        {
-          "name": "usdcAmount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "initializeBasket",
-      "docs": [
-        "Admin: create the basket PDA, the basket-token mint, and the 3 vault ATAs."
-      ],
-      "discriminator": [
-        246,
-        234,
-        106,
-        12,
-        103,
-        95,
-        178,
-        166
-      ],
-      "accounts": [
-        {
-          "name": "authority",
+          "name": "creator",
           "writable": true,
           "signer": true
         },
@@ -395,11 +48,16 @@ export type MiniSymmetry = {
                   115,
                   107,
                   101,
-                  116,
-                  45,
-                  118,
-                  50
+                  116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
               }
             ]
           }
@@ -407,285 +65,22 @@ export type MiniSymmetry = {
         {
           "name": "basketMint",
           "writable": true,
-          "signer": true
-        },
-        {
-          "name": "solMint"
-        },
-        {
-          "name": "jupMint"
-        },
-        {
-          "name": "usdcMint"
-        },
-        {
-          "name": "vaultSol",
-          "writable": true,
           "pda": {
             "seeds": [
               {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  109,
+                  105,
+                  110,
+                  116
                 ]
               },
               {
                 "kind": "account",
-                "path": "solMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultJup",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
                 "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "jupMint"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultUsdc",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "usdcMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
         },
         {
@@ -707,26 +102,21 @@ export type MiniSymmetry = {
       ],
       "args": [
         {
-          "name": "weightsBps",
-          "type": {
-            "array": [
-              "u16",
-              3
-            ]
-          }
+          "name": "id",
+          "type": "u64"
         },
         {
-          "name": "feedIds",
+          "name": "numAssets",
+          "type": "u8"
+        },
+        {
+          "name": "quoteIndex",
+          "type": "u8"
+        },
+        {
+          "name": "weightsBps",
           "type": {
-            "array": [
-              {
-                "array": [
-                  "u8",
-                  32
-                ]
-              },
-              3
-            ]
+            "vec": "u16"
           }
         },
         {
@@ -740,11 +130,61 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "deposit",
+      "docs": [
+        "Deposit the quote asset; receive basket tokens priced by NAV (before this deposit).",
+        "`remaining_accounts`: [vault_0..vault_{n-1}, price_0..price_{n-1}]."
+      ],
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "basketMint",
+          "writable": true
+        },
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "depositorQuote",
+          "writable": true
+        },
+        {
+          "name": "depositorBasket",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "quoteAmount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "rebalance",
       "docs": [
-        "Keeper-driven rebalance. Reads Pyth, checks drift >= threshold + interval,",
-        "then mock-swaps each non-USDC asset to target against the keeper's reserve",
-        "at the oracle price (0-slippage demo fill). Keeper == reserve owner."
+        "Keeper-driven rebalance toward target weights via an oracle-priced mock swap",
+        "against the keeper's own reserve. Per-asset best-effort: an asset whose",
+        "reserve can't cover the delta is skipped, never reverting the whole tx.",
+        "`remaining_accounts`: [vault_0.., price_0.., reserve_0..] (three n-blocks)."
       ],
       "discriminator": [
         108,
@@ -759,324 +199,12 @@ export type MiniSymmetry = {
       "accounts": [
         {
           "name": "basket",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116,
-                  45,
-                  118,
-                  50
-                ]
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "keeper",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "vaultSol",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [0].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultJup",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [1].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultUsdc",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [USDC_INDEX].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "reserveSol",
-          "writable": true
-        },
-        {
-          "name": "reserveJup",
-          "writable": true
-        },
-        {
-          "name": "reserveUsdc",
-          "writable": true
-        },
-        {
-          "name": "priceSol"
-        },
-        {
-          "name": "priceJup"
-        },
-        {
-          "name": "priceUsdc"
         },
         {
           "name": "tokenProgram",
@@ -1100,25 +228,7 @@ export type MiniSymmetry = {
       "accounts": [
         {
           "name": "basket",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116,
-                  45,
-                  118,
-                  50
-                ]
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "authority",
@@ -1154,25 +264,7 @@ export type MiniSymmetry = {
       "accounts": [
         {
           "name": "basket",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116,
-                  45,
-                  118,
-                  50
-                ]
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "authority",
@@ -1190,10 +282,80 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "setSupportedAsset",
+      "docs": [
+        "Admin: add or update a supported asset. Binds the mint to its Pyth feed",
+        "and reads `decimals` from the real Mint (never trusts a caller arg)."
+      ],
+      "discriminator": [
+        79,
+        67,
+        133,
+        132,
+        129,
+        164,
+        92,
+        201
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "address": "Ea8PXNo7mjAp7TZKdPNZc4jhTngqzaJrkTY8sFKw7mqJ"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "supportedAsset",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "feedId",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "isQuoteEligible",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "withdraw",
       "docs": [
         "Withdraw: burn basket tokens, receive in-kind pro-rata of every asset.",
-        "Oracle-free, swap-free, atomic — the un-gameable exit."
+        "Oracle-free, swap-free, atomic — the un-gameable exit.",
+        "`remaining_accounts`: [vault_0..vault_{n-1}, user_ata_0..user_ata_{n-1}]."
       ],
       "discriminator": [
         183,
@@ -1207,25 +369,7 @@ export type MiniSymmetry = {
       ],
       "accounts": [
         {
-          "name": "basket",
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116,
-                  45,
-                  118,
-                  50
-                ]
-              }
-            ]
-          }
+          "name": "basket"
         },
         {
           "name": "basketMint",
@@ -1238,291 +382,6 @@ export type MiniSymmetry = {
         },
         {
           "name": "userBasket",
-          "writable": true
-        },
-        {
-          "name": "vaultSol",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [0].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultJup",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [1].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "vaultUsdc",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "basket"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "basket.assets [USDC_INDEX].mint",
-                "account": "basket"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
-        },
-        {
-          "name": "userSol",
-          "writable": true
-        },
-        {
-          "name": "userJup",
-          "writable": true
-        },
-        {
-          "name": "userUsdc",
           "writable": true
         },
         {
@@ -1551,20 +410,33 @@ export type MiniSymmetry = {
         218,
         248
       ]
+    },
+    {
+      "name": "supportedAsset",
+      "discriminator": [
+        129,
+        27,
+        96,
+        192,
+        89,
+        180,
+        227,
+        200
+      ]
     }
   ],
   "events": [
     {
-      "name": "basketInitialized",
+      "name": "basketCreated",
       "discriminator": [
-        16,
-        54,
-        84,
-        252,
-        60,
-        150,
-        211,
-        136
+        26,
+        146,
+        108,
+        155,
+        189,
+        85,
+        8,
+        7
       ]
     },
     {
@@ -1594,6 +466,19 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "supportedAssetSet",
+      "discriminator": [
+        53,
+        98,
+        118,
+        75,
+        253,
+        110,
+        99,
+        229
+      ]
+    },
+    {
       "name": "withdrawn",
       "discriminator": [
         20,
@@ -1610,83 +495,138 @@ export type MiniSymmetry = {
   "errors": [
     {
       "code": 6000,
-      "name": "badWeights",
-      "msg": "weights must sum to 10000 bps"
+      "name": "badAssetCount",
+      "msg": "asset count must be between 2 and 4"
     },
     {
       "code": 6001,
+      "name": "badWeights",
+      "msg": "weights must sum to 10000 bps and match asset count"
+    },
+    {
+      "code": 6002,
+      "name": "badQuoteIndex",
+      "msg": "quote index out of range"
+    },
+    {
+      "code": 6003,
+      "name": "badParams",
+      "msg": "threshold/interval below minimum"
+    },
+    {
+      "code": 6004,
+      "name": "badRemainingAccounts",
+      "msg": "wrong number of remaining accounts"
+    },
+    {
+      "code": 6005,
+      "name": "duplicateAsset",
+      "msg": "duplicate asset in basket"
+    },
+    {
+      "code": 6006,
+      "name": "badMint",
+      "msg": "invalid SPL mint"
+    },
+    {
+      "code": 6007,
+      "name": "assetNotSupported",
+      "msg": "asset not in the supported allowlist"
+    },
+    {
+      "code": 6008,
+      "name": "quoteNotEligible",
+      "msg": "quote asset is not quote-eligible"
+    },
+    {
+      "code": 6009,
       "name": "paused",
       "msg": "basket is paused"
     },
     {
-      "code": 6002,
+      "code": 6010,
       "name": "zeroAmount",
       "msg": "amount must be > 0"
     },
     {
-      "code": 6003,
+      "code": 6011,
       "name": "badAmount",
       "msg": "invalid amount"
     },
     {
-      "code": 6004,
+      "code": 6012,
       "name": "zeroMint",
       "msg": "would mint zero basket tokens"
     },
     {
-      "code": 6005,
+      "code": 6013,
+      "name": "dustWithdraw",
+      "msg": "withdraw rounds to zero — increase amount"
+    },
+    {
+      "code": 6014,
       "name": "mathOverflow",
       "msg": "math overflow"
     },
     {
-      "code": 6006,
+      "code": 6015,
       "name": "stalePrice",
       "msg": "pyth price is stale"
     },
     {
-      "code": 6007,
+      "code": 6016,
       "name": "badPrice",
       "msg": "pyth price invalid"
     },
     {
-      "code": 6008,
+      "code": 6017,
       "name": "lowConfidence",
       "msg": "pyth price confidence too low"
     },
     {
-      "code": 6009,
+      "code": 6018,
       "name": "emptyVault",
       "msg": "vault is empty"
     },
     {
-      "code": 6010,
+      "code": 6019,
       "name": "intervalNotElapsed",
       "msg": "rebalance interval not elapsed"
     },
     {
-      "code": 6011,
+      "code": 6020,
       "name": "driftBelowThreshold",
       "msg": "drift below threshold"
     },
     {
-      "code": 6012,
+      "code": 6021,
       "name": "unauthorized",
       "msg": "unauthorized"
     },
     {
-      "code": 6013,
+      "code": 6022,
       "name": "badPriceOwner",
       "msg": "price account not owned by pyth receiver"
     },
     {
-      "code": 6014,
+      "code": 6023,
       "name": "feedMismatch",
       "msg": "price feed id mismatch"
     },
     {
-      "code": 6015,
-      "name": "badUsdcDecimals",
-      "msg": "usdc asset must have 6 decimals"
+      "code": 6024,
+      "name": "badVault",
+      "msg": "invalid vault account"
+    },
+    {
+      "code": 6025,
+      "name": "badUserAccount",
+      "msg": "invalid user/reserve token account"
+    },
+    {
+      "code": 6026,
+      "name": "duplicatePrice",
+      "msg": "duplicate price account"
     }
   ],
   "types": [
@@ -1733,6 +673,18 @@ export type MiniSymmetry = {
             "type": "pubkey"
           },
           {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "numAssets",
+            "type": "u8"
+          },
+          {
+            "name": "quoteIndex",
+            "type": "u8"
+          },
+          {
             "name": "assets",
             "type": {
               "array": [
@@ -1741,7 +693,7 @@ export type MiniSymmetry = {
                     "name": "assetConfig"
                   }
                 },
-                3
+                8
               ]
             }
           },
@@ -1769,7 +721,7 @@ export type MiniSymmetry = {
       }
     },
     {
-      "name": "basketInitialized",
+      "name": "basketCreated",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1778,8 +730,16 @@ export type MiniSymmetry = {
             "type": "pubkey"
           },
           {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
             "name": "basketMint",
             "type": "pubkey"
+          },
+          {
+            "name": "numAssets",
+            "type": "u8"
           }
         ]
       }
@@ -1794,7 +754,11 @@ export type MiniSymmetry = {
             "type": "pubkey"
           },
           {
-            "name": "usdcAmount",
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
+            "name": "quoteAmount",
             "type": "u64"
           },
           {
@@ -1818,6 +782,10 @@ export type MiniSymmetry = {
             "type": "pubkey"
           },
           {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
             "name": "maxDriftBps",
             "type": "u16"
           },
@@ -1829,12 +797,65 @@ export type MiniSymmetry = {
       }
     },
     {
+      "name": "supportedAsset",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "feedId",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "isQuoteEligible",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "supportedAssetSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "isQuoteEligible",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "withdrawn",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "basket",
             "type": "pubkey"
           },
           {

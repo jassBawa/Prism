@@ -1,0 +1,32 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { computeDrift } from "../sdk/src/math.js";
+
+// micro-USD per whole token: SOL $100, JUP $0.50, USDC $1.
+const PRICES = [100_000_000, 500_000, 1_000_000];
+
+test("empty vault -> zero nav and drift", () => {
+  const r = computeDrift([0n, 0n, 0n], PRICES);
+  assert.equal(r.navMicro, 0);
+  assert.equal(r.maxDriftBps, 0);
+});
+
+test("100% USDC vault -> $10 nav, max drift 8000 bps vs 50/30/20 target", () => {
+  const r = computeDrift([0n, 0n, 10_000_000n], PRICES); // 10 USDC (6 dec)
+  assert.equal(r.navMicro, 10_000_000);
+  assert.deepEqual(r.weightsBps, [0, 0, 10000]);
+  assert.equal(r.maxDriftBps, 8000); // USDC 100% vs 20% target
+});
+
+test("on-target basket -> ~zero drift", () => {
+  // $5 SOL = 0.05 SOL (9 dec), $3 JUP = 6 JUP (6 dec), $2 USDC (6 dec)
+  const r = computeDrift([50_000_000n, 6_000_000n, 2_000_000n], PRICES);
+  assert.equal(r.navMicro, 10_000_000);
+  assert.deepEqual(r.weightsBps, [5000, 3000, 2000]);
+  assert.equal(r.maxDriftBps, 0);
+});
+
+test("decimals scaling: 1 SOL (9 dec) at $100 = $100 nav", () => {
+  const r = computeDrift([1_000_000_000n, 0n, 0n], PRICES);
+  assert.equal(r.navMicro, 100_000_000);
+});

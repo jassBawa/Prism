@@ -13,8 +13,11 @@
     "keeper": "tsx keeper/index.ts",
     "show": "tsx scripts/show.ts",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
     "lint": "prettier \"{sdk,scripts,keeper}/**/*.ts\" --check",
-    "lint:fix": "prettier \"{sdk,scripts,keeper}/**/*.ts\" -w"
+    "lint:fix": "prettier \"{sdk,scripts,keeper}/**/*.ts\" -w",
+    "landing:dev": "pnpm --dir landing dev",
+    "landing:build": "pnpm --dir landing build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

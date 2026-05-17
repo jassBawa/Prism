@@ -2,9 +2,21 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Wallet } from "@coral-xyz/anchor";
 import type { Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { feedId0x } from "./constants.js";
+import { FEED_HEX, feedId0x, type AssetKey } from "./constants.js";
 
 const HERMES_URL = "https://hermes.pyth.network";
+
+/** Latest SOL/JUP/USDC prices as micro-USD per whole token (for off-chain drift calc). */
+export async function latestPricesMicro(): Promise<Record<AssetKey, number>> {
+  const hermes = new HermesClient(HERMES_URL, {});
+  const feeds = [feedId0x("sol"), feedId0x("jup"), feedId0x("usdc")];
+  const res = await hermes.getLatestPriceUpdates(feeds, { parsed: true });
+  const byId: Record<string, number> = {};
+  for (const p of res.parsed ?? []) {
+    byId[p.id] = Number(p.price.price) * 10 ** (p.price.expo + 6);
+  }
+  return { sol: byId[FEED_HEX.sol] ?? 0, jup: byId[FEED_HEX.jup] ?? 0, usdc: byId[FEED_HEX.usdc] ?? 0 };
+}
 
 export interface PriceAccounts {
   sol: PublicKey;

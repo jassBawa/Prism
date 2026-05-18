@@ -1,14 +1,14 @@
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import type { Connection, PublicKey, TransactionInstruction, VersionedTransaction } from "@solana/web3.js";
-import { ASSETS, FEED_HEX } from "./constants";
+import {
+  ComputeBudgetProgram,
+  type Connection,
+  type PublicKey,
+  type TransactionInstruction,
+  type VersionedTransaction,
+} from "@solana/web3.js";
+import { feedId0x } from "./constants";
 
 const HERMES = "https://hermes.pyth.network";
-
-export interface PriceAccounts {
-  sol: PublicKey;
-  jup: PublicKey;
-  usdc: PublicKey;
-}
 
 export interface SignerWallet {
   publicKey: PublicKey;
@@ -22,36 +22,42 @@ interface HermesLatest {
 }
 
 /** Hermes REST (avoids the hermes-client SSE dep that breaks the webpack build). */
-async function hermesLatest(): Promise<HermesLatest> {
-  const ids = [FEED_HEX.sol, FEED_HEX.jup, FEED_HEX.usdc].map((h) => `ids[]=0x${h}`).join("&");
+async function hermesLatest(feedsHex: string[]): Promise<HermesLatest> {
+  const ids = feedsHex.map((h) => `ids[]=0x${h}`).join("&");
   const res = await fetch(`${HERMES}/v2/updates/price/latest?${ids}&encoding=base64&parsed=true`);
   if (!res.ok) throw new Error(`hermes ${res.status}`);
   return res.json() as Promise<HermesLatest>;
 }
 
-/** Latest prices (USD per whole token) for display + off-chain drift. */
-export async function latestPricesUsd(): Promise<Record<string, number>> {
-  const { parsed = [] } = await hermesLatest();
+/** Latest prices (USD per whole token) keyed by feed hex (no 0x). */
+export async function latestPricesUsd(feedsHex: string[]): Promise<Record<string, number>> {
+  const { parsed = [] } = await hermesLatest(feedsHex);
   const out: Record<string, number> = {};
-  for (const p of parsed) out[p.id] = Number(p.price.price) * 10 ** p.price.expo;
-  return { sol: out[FEED_HEX.sol] ?? 0, jup: out[FEED_HEX.jup] ?? 0, usdc: out[FEED_HEX.usdc] ?? 0 };
+  for (const p of parsed) out[p.id] = Number(p.price.price) * 10 ** p.price.expo; // p.id is hex no 0x
+  return out;
 }
 
-/** Post fresh Pyth updates + consumer ix(s) in one bundle, signed by the wallet. */
+export type PriceFor = (feedHex: string) => PublicKey;
+
+/** Post fresh Pyth updates for `feedsHex` + consumer ix(s) in one bundle, signed by the wallet. */
 export async function sendWithPyth(
   connection: Connection,
   wallet: SignerWallet,
-  buildIxs: (price: PriceAccounts) => Promise<TransactionInstruction[]>,
+  feedsHex: string[],
+  buildIxs: (priceFor: PriceFor) => Promise<TransactionInstruction[]>,
 ): Promise<string[]> {
-  const { binary } = await hermesLatest();
+  const { binary } = await hermesLatest(feedsHex);
 
   const receiver = new PythSolanaReceiver({ connection, wallet: wallet as never });
   const builder = receiver.newTransactionBuilder({ closeUpdateAccounts: true });
   await builder.addPostPartiallyVerifiedPriceUpdates(binary.data);
-  await builder.addPriceConsumerInstructions(async (get) => {
-    const feed0x = (k: keyof typeof FEED_HEX) => "0x" + FEED_HEX[k];
-    const ixs = await buildIxs({ sol: get(feed0x("sol")), jup: get(feed0x("jup")), usdc: get(feed0x("usdc")) });
-    return ixs.map((instruction) => ({ instruction, signers: [] }));
+  await builder.addPriceConsumerInstructions(async (get: (id: string) => PublicKey) => {
+    const priceFor: PriceFor = (hex) => get(feedId0x(hex));
+    const ixs = await buildIxs(priceFor);
+    return [
+      { instruction: ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), signers: [] },
+      ...ixs.map((instruction) => ({ instruction, signers: [] })),
+    ];
   });
 
   const built = await builder.buildVersionedTransactions({ computeUnitPriceMicroLamports: 50_000 });
@@ -65,5 +71,3 @@ export async function sendWithPyth(
   }
   return sigs;
 }
-
-export { ASSETS };

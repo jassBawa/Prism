@@ -12,6 +12,8 @@
     "rebalance": "tsx scripts/rebalance.ts",
     "keeper": "tsx keeper/index.ts",
     "show": "tsx scripts/show.ts",
+    "faucet": "tsx scripts/faucet.ts",
+    "app:env": "tsx scripts/app-env.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "lint": "prettier \"{sdk,scripts,keeper}/**/*.ts\" --check",

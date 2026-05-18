@@ -1,36 +1,28 @@
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getConnection, getProgram, loadKeypair } from "../sdk/src/client.js";
 import { explorer } from "../sdk/src/constants.js";
-import { loadBasketConfig, pk } from "../sdk/src/config.js";
+import { loadBasketsConfig, pickBasket, pk } from "../sdk/src/config.js";
+import { rebalanceRemaining } from "../sdk/src/accounts.js";
 import { sendWithPyth } from "../sdk/src/pyth.js";
 
-/** Keeper: rebalance the basket toward target weights via an oracle-priced mock-swap. */
+const BASKET_ARG = process.argv[2];
+
+/** Keeper: rebalance one basket toward target weights via an oracle-priced mock-swap. */
 async function main() {
   const conn = getConnection();
   const admin = loadKeypair();
   const { program } = getProgram(admin, conn);
-  const cfg = loadBasketConfig();
+  const b = pickBasket(loadBasketsConfig(), BASKET_ARG);
   const keeper = admin.publicKey;
-  const reserve = (mint: string) => getAssociatedTokenAddressSync(pk(mint), keeper);
+  const basket = pk(b.basket);
 
-  console.log("Rebalancing (keeper)...");
-  const sigs = await sendWithPyth(conn, admin, (price) =>
+  console.log(`Rebalancing "${b.label}" (keeper)...`);
+  const feeds = b.assets.map((a) => a.feed);
+  const sigs = await sendWithPyth(conn, admin, feeds, (priceFor) =>
     program.methods
       .rebalance()
-      .accountsPartial({
-        basket: pk(cfg.basket),
-        keeper,
-        vaultSol: pk(cfg.vaults.sol),
-        vaultJup: pk(cfg.vaults.jup),
-        vaultUsdc: pk(cfg.vaults.usdc),
-        reserveSol: reserve(cfg.mints.sol),
-        reserveJup: reserve(cfg.mints.jup),
-        reserveUsdc: reserve(cfg.mints.usdc),
-        priceSol: price.sol,
-        priceJup: price.jup,
-        priceUsdc: price.usdc,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
+      .accountsPartial({ basket, keeper, tokenProgram: TOKEN_PROGRAM_ID })
+      .remainingAccounts(rebalanceRemaining(basket, keeper, b.assets, priceFor))
       .instruction(),
   );
   console.log("✅ rebalanced:", sigs.map((s) => explorer("tx", s)).join("\n   "));

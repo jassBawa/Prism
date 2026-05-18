@@ -1,55 +1,52 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { Wallet } from "@coral-xyz/anchor";
-import type { Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { FEED_HEX, feedId0x, type AssetKey } from "./constants.js";
+import { ComputeBudgetProgram, type Connection, type Keypair, type PublicKey, type TransactionInstruction } from "@solana/web3.js";
+import { feedId0x } from "./constants.js";
 
 const HERMES_URL = "https://hermes.pyth.network";
 
-/** Latest SOL/JUP/USDC prices as micro-USD per whole token (for off-chain drift calc). */
-export async function latestPricesMicro(): Promise<Record<AssetKey, number>> {
+/** Latest prices as micro-USD per whole token, keyed by feed hex (no 0x). */
+export async function latestPricesMicro(feedsHex: string[]): Promise<Record<string, number>> {
   const hermes = new HermesClient(HERMES_URL, {});
-  const feeds = [feedId0x("sol"), feedId0x("jup"), feedId0x("usdc")];
-  const res = await hermes.getLatestPriceUpdates(feeds, { parsed: true });
-  const byId: Record<string, number> = {};
+  const res = await hermes.getLatestPriceUpdates(feedsHex.map(feedId0x), { parsed: true });
+  const out: Record<string, number> = {};
   for (const p of res.parsed ?? []) {
-    byId[p.id] = Number(p.price.price) * 10 ** (p.price.expo + 6);
+    out[p.id] = Number(p.price.price) * 10 ** (p.price.expo + 6); // p.id is hex without 0x
   }
-  return { sol: byId[FEED_HEX.sol] ?? 0, jup: byId[FEED_HEX.jup] ?? 0, usdc: byId[FEED_HEX.usdc] ?? 0 };
+  return out;
 }
 
-export interface PriceAccounts {
-  sol: PublicKey;
-  jup: PublicKey;
-  usdc: PublicKey;
-}
+export type PriceFor = (feedHex: string) => PublicKey;
 
 /**
- * Pull-oracle flow: fetch fresh SOL/JUP/USDC updates from Hermes, post them with
+ * Pull-oracle flow: fetch fresh updates for `feedsHex` from Hermes, post them with
  * `addPostPartiallyVerifiedPriceUpdates` (postUpdateAtomic — fits in ONE tx with the
  * consumer ix), then build the program instruction against the ephemeral price
- * accounts. `closeUpdateAccounts` reclaims the rent each call (keeper-safe).
+ * accounts (looked up via `priceFor(feedHex)`). A compute-unit bump is prepended for
+ * the N-asset rebalance. `closeUpdateAccounts` reclaims rent each call (keeper-safe).
+ * Atomic-post caps at ~4 feeds before the 1232-byte tx limit.
  */
 export async function sendWithPyth(
   connection: Connection,
   kp: Keypair,
-  buildIx: (price: PriceAccounts) => Promise<TransactionInstruction>,
+  feedsHex: string[],
+  buildIx: (priceFor: PriceFor) => Promise<TransactionInstruction>,
 ): Promise<string[]> {
   const hermes = new HermesClient(HERMES_URL, {});
-  const feeds = [feedId0x("sol"), feedId0x("jup"), feedId0x("usdc")];
-  const updates = await hermes.getLatestPriceUpdates(feeds, { encoding: "base64" });
+  const updates = await hermes.getLatestPriceUpdates(feedsHex.map(feedId0x), { encoding: "base64" });
   const data = updates.binary.data;
 
   const receiver = new PythSolanaReceiver({ connection, wallet: new Wallet(kp) as never });
   const builder = receiver.newTransactionBuilder({ closeUpdateAccounts: true });
   await builder.addPostPartiallyVerifiedPriceUpdates(data);
-  await builder.addPriceConsumerInstructions(async (getPriceUpdateAccount) => {
-    const ix = await buildIx({
-      sol: getPriceUpdateAccount(feedId0x("sol")),
-      jup: getPriceUpdateAccount(feedId0x("jup")),
-      usdc: getPriceUpdateAccount(feedId0x("usdc")),
-    });
-    return [{ instruction: ix, signers: [] }];
+  await builder.addPriceConsumerInstructions(async (getPriceUpdateAccount: (feedId: string) => PublicKey) => {
+    const priceFor: PriceFor = (feedHex) => getPriceUpdateAccount(feedId0x(feedHex));
+    const ix = await buildIx(priceFor);
+    return [
+      { instruction: ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }), signers: [] },
+      { instruction: ix, signers: [] },
+    ];
   });
 
   // Send/confirm with our own web3.js-1.98 connection — the receiver's bundled

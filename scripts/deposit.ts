@@ -1,22 +1,27 @@
 import { BN } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { getConnection, getProgram, loadKeypair } from "../sdk/src/client.js";
 import { explorer } from "../sdk/src/constants.js";
-import { loadBasketConfig, pk, uiBalance } from "../sdk/src/config.js";
+import { loadBasketsConfig, pickBasket, pk } from "../sdk/src/config.js";
+import { ownerAta } from "../sdk/src/pdas.js";
+import { depositRemaining } from "../sdk/src/accounts.js";
 import { sendWithPyth } from "../sdk/src/pyth.js";
 
-const USDC = Number(process.argv[2] ?? "10"); // whole USDC
+const AMOUNT = Number(process.argv[2] ?? "10"); // whole quote tokens (e.g. USDC)
+const BASKET_ARG = process.argv[3]; // optional basket pubkey (defaults to first)
 
 async function main() {
   const conn = getConnection();
   const admin = loadKeypair();
   const { program } = getProgram(admin, conn);
-  const cfg = loadBasketConfig();
+  const b = pickBasket(loadBasketsConfig(), BASKET_ARG);
   const depositor = admin.publicKey;
+  const basket = pk(b.basket);
+  const quote = b.assets[b.quoteIndex]!;
 
-  const depositorBasket = (await getOrCreateAssociatedTokenAccount(conn, admin, pk(cfg.basketMint), depositor)).address;
-  const depositorUsdc = getAssociatedTokenAddressSync(pk(cfg.mints.usdc), depositor);
-  const amount = new BN(Math.round(USDC * 1e6));
+  const depositorBasket = (await getOrCreateAssociatedTokenAccount(conn, admin, pk(b.basketMint), depositor)).address;
+  const depositorQuote = ownerAta(depositor, pk(quote.mint));
+  const amount = new BN(Math.round(AMOUNT * 10 ** quote.decimals));
 
   const basketBal = async (): Promise<number> => {
     try {
@@ -25,33 +30,29 @@ async function main() {
       return 0;
     }
   };
-  console.log(`Depositing ${USDC} USDC...`);
+  console.log(`Depositing ${AMOUNT} ${quote.key.toUpperCase()} into "${b.label}"...`);
   const before = await basketBal();
 
-  const sigs = await sendWithPyth(conn, admin, (price) =>
+  const feeds = b.assets.map((a) => a.feed);
+  const sigs = await sendWithPyth(conn, admin, feeds, (priceFor) =>
     program.methods
       .deposit(amount)
       .accountsPartial({
-        basket: pk(cfg.basket),
-        basketMint: pk(cfg.basketMint),
+        basket,
+        basketMint: pk(b.basketMint),
         depositor,
-        depositorUsdc,
+        depositorQuote,
         depositorBasket,
-        vaultSol: pk(cfg.vaults.sol),
-        vaultJup: pk(cfg.vaults.jup),
-        vaultUsdc: pk(cfg.vaults.usdc),
-        priceSol: price.sol,
-        priceJup: price.jup,
-        priceUsdc: price.usdc,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
+      .remainingAccounts(depositRemaining(basket, b.assets, priceFor))
       .instruction(),
   );
 
   console.log("tx:", sigs.map((s) => explorer("tx", s)).join("\n    "));
   const after = await basketBal();
   console.log(`basket token: ${before} -> ${after}`);
-  if (after > before) console.log("\n✅ DEPOSIT — basket token minted by NAV (Pyth-priced) on devnet.");
+  if (after > before) console.log("\n✅ DEPOSIT — basket token minted by NAV (Pyth-priced).");
 }
 
 main().catch((e) => {

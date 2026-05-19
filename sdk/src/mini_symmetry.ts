@@ -84,6 +84,27 @@ export type MiniSymmetry = {
           }
         },
         {
+          "name": "registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
@@ -177,6 +198,58 @@ export type MiniSymmetry = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "initRegistry",
+      "docs": [
+        "Admin: create the basket registry (one-time). Lets clients/keeper enumerate",
+        "baskets with getAccountInfo + getMultipleAccounts — no getProgramAccounts,",
+        "which public/forked RPCs throttle or don't serve."
+      ],
+      "discriminator": [
+        131,
+        22,
+        4,
+        103,
+        24,
+        94,
+        163,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "address": "Ea8PXNo7mjAp7TZKdPNZc4jhTngqzaJrkTY8sFKw7mqJ"
+        },
+        {
+          "name": "registry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "rebalance",
@@ -412,6 +485,19 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "registry",
+      "discriminator": [
+        47,
+        174,
+        110,
+        246,
+        184,
+        182,
+        252,
+        218
+      ]
+    },
+    {
       "name": "supportedAsset",
       "discriminator": [
         129,
@@ -627,6 +713,11 @@ export type MiniSymmetry = {
       "code": 6026,
       "name": "duplicatePrice",
       "msg": "duplicate price account"
+    },
+    {
+      "code": 6027,
+      "name": "registryFull",
+      "msg": "basket registry is full"
     }
   ],
   "types": [
@@ -792,6 +883,49 @@ export type MiniSymmetry = {
           {
             "name": "nav",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "registry",
+      "docs": [
+        "On-chain index of every basket pubkey — read with getAccountInfo +",
+        "getMultipleAccounts instead of getProgramAccounts. Zero-copy: the ~8 KB array",
+        "must be accessed in place, never deserialized onto the BPF stack."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "count",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "pad",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          },
+          {
+            "name": "baskets",
+            "type": {
+              "array": [
+                "pubkey",
+                256
+              ]
+            }
           }
         ]
       }

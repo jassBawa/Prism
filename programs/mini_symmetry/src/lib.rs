@@ -30,6 +30,9 @@ pub const PRICED_MAX_ASSETS: usize = 4; // atomic-Pyth tx-size practical cap (en
 pub const BASKET_SEED: &[u8] = b"basket";
 pub const MINT_SEED: &[u8] = b"mint";
 pub const ASSET_SEED: &[u8] = b"asset";
+pub const REGISTRY_SEED: &[u8] = b"registry";
+/// Max baskets tracked in the on-chain registry (keeps init under the 10 KB CPI cap).
+pub const MAX_BASKETS: usize = 256;
 
 pub const BASKET_DECIMALS: u8 = 6;
 pub const BPS: u128 = 10_000;
@@ -63,6 +66,16 @@ pub mod mini_symmetry {
         s.is_quote_eligible = is_quote_eligible;
         s.bump = ctx.bumps.supported_asset;
         emit!(SupportedAssetSet { mint: s.mint, is_quote_eligible });
+        Ok(())
+    }
+
+    /// Admin: create the basket registry (one-time). Lets clients/keeper enumerate
+    /// baskets with getAccountInfo + getMultipleAccounts — no getProgramAccounts,
+    /// which public/forked RPCs throttle or don't serve.
+    pub fn init_registry(ctx: Context<InitRegistry>) -> Result<()> {
+        let mut r = ctx.accounts.registry.load_init()?;
+        r.count = 0;
+        r.bump = ctx.bumps.registry;
         Ok(())
     }
 
@@ -150,6 +163,15 @@ pub mod mini_symmetry {
             };
         }
         require!(weight_sum == BPS as u32, MsError::BadWeights);
+
+        // register the basket for getProgramAccounts-free discovery.
+        {
+            let mut reg = ctx.accounts.registry.load_mut()?;
+            let slot = reg.count as usize;
+            require!(slot < MAX_BASKETS, MsError::RegistryFull);
+            reg.baskets[slot] = basket_key;
+            reg.count += 1;
+        }
 
         let b = &mut ctx.accounts.basket;
         b.authority = ctx.accounts.creator.key();
@@ -633,6 +655,18 @@ pub struct SupportedAsset {
     pub bump: u8,
 }
 
+/// On-chain index of every basket pubkey — read with getAccountInfo +
+/// getMultipleAccounts instead of getProgramAccounts. Zero-copy: the ~8 KB array
+/// must be accessed in place, never deserialized onto the BPF stack.
+#[account(zero_copy)]
+#[repr(C)]
+pub struct Registry {
+    pub count: u32,
+    pub bump: u8,
+    pub _pad: [u8; 3],
+    pub baskets: [Pubkey; MAX_BASKETS],
+}
+
 // ----------------------------------------------------------------------------
 // Accounts
 // ----------------------------------------------------------------------------
@@ -675,10 +709,27 @@ pub struct CreateBasket<'info> {
         mint::authority = basket,
     )]
     pub basket_mint: Box<Account<'info, Mint>>,
+    #[account(mut, seeds = [REGISTRY_SEED], bump)]
+    pub registry: AccountLoader<'info, Registry>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+pub struct InitRegistry<'info> {
+    #[account(mut, address = ADMIN @ MsError::Unauthorized)]
+    pub admin: Signer<'info>,
+    #[account(
+        init,
+        payer = admin,
+        space = 8 + std::mem::size_of::<Registry>(),
+        seeds = [REGISTRY_SEED],
+        bump
+    )]
+    pub registry: AccountLoader<'info, Registry>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -817,4 +868,6 @@ pub enum MsError {
     BadUserAccount,
     #[msg("duplicate price account")]
     DuplicatePrice,
+    #[msg("basket registry is full")]
+    RegistryFull,
 }

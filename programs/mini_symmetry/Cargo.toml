@@ -23,6 +23,7 @@ custom-panic = []
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
+bytemuck = { version = "1.13", features = ["derive", "min_const_generics"] }
 
 [dev-dependencies]
 litesvm = "0.10.0"

@@ -1,7 +1,10 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { ASSET_SEED, BASKET_SEED, MINT_SEED, PROGRAM_ID } from "./constants.js";
+import { ASSET_SEED, BASKET_SEED, MINT_SEED, PROGRAM_ID, REGISTRY_SEED } from "./constants.js";
+
+/** The singleton basket registry PDA. */
+export const registryPda = (): PublicKey => PublicKey.findProgramAddressSync([REGISTRY_SEED], PROGRAM_ID)[0];
 
 const u64le = (id: number | bigint): Buffer => new BN(id.toString()).toArrayLike(Buffer, "le", 8);
 

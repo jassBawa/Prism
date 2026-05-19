@@ -12,6 +12,7 @@
     "rebalance": "tsx scripts/rebalance.ts",
     "skew": "tsx scripts/skew.ts",
     "keeper": "tsx keeper/index.ts",
+    "ops": "tsx ops/index.ts",
     "show": "tsx scripts/show.ts",
     "negative": "tsx scripts/negative.ts",
     "faucet": "tsx scripts/faucet.ts",

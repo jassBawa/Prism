@@ -15,7 +15,7 @@ import {
   feedBytes,
   supportedByKey,
 } from "../sdk/src/constants.js";
-import { basketMintPda, basketPda, supportedAssetPda, vaultAta } from "../sdk/src/pdas.js";
+import { basketMintPda, basketPda, registryPda, supportedAssetPda, vaultAta } from "../sdk/src/pdas.js";
 import { createBasketRemaining } from "../sdk/src/accounts.js";
 import { saveBasketsConfig, type AssetEntry, type BasketEntry, type BasketsConfig } from "../sdk/src/config.js";
 
@@ -66,6 +66,13 @@ async function main() {
     console.log(`    minted ${whole} ${a.key}`);
   }
 
+  // 3.5 Init the basket registry (one-time; getProgramAccounts-free discovery).
+  console.log("\n[3.5] init_registry...");
+  await program.methods
+    .initRegistry()
+    .accountsPartial({ admin: admin.publicKey, registry: registryPda(), systemProgram: SystemProgram.programId })
+    .rpc();
+
   // 4. Create the demo baskets.
   console.log(`\n[4] create_basket x${BASKET_SPECS.length}...`);
   const baskets: BasketEntry[] = [];
@@ -81,6 +88,7 @@ async function main() {
         creator: admin.publicKey,
         basket,
         basketMint,
+        registry: registryPda(),
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,

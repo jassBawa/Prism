@@ -8,11 +8,13 @@ import { loadBasketsConfig } from "../sdk/src/config.js";
 // create-basket form to map a supported-asset key -> its on-chain mint).
 const cfg = loadBasketsConfig();
 const rpc = process.env.RPC_URL || "http://127.0.0.1:8899";
+const faucet = process.env.FAUCET_URL || "";
 const env =
   [
     `NEXT_PUBLIC_RPC_URL=${rpc}`,
     `NEXT_PUBLIC_PROGRAM_ID=${cfg.programId}`,
     `NEXT_PUBLIC_MINTS=${JSON.stringify(cfg.mints)}`,
+    `NEXT_PUBLIC_FAUCET_URL=${faucet}`,
   ].join("\n") + "\n";
 
 writeFileSync(resolve(process.cwd(), "app/.env.local"), env);

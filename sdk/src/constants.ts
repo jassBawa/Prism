@@ -12,6 +12,7 @@ export const RPC_URL = process.env.RPC_URL?.trim() || "https://api.devnet.solana
 export const BASKET_SEED = Buffer.from("basket");
 export const MINT_SEED = Buffer.from("mint");
 export const ASSET_SEED = Buffer.from("asset");
+export const REGISTRY_SEED = Buffer.from("registry");
 
 export const PYTH_RECEIVER = new PublicKey("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 
@@ -51,9 +52,9 @@ export const feedBytes = (feedHex: string): number[] => Array.from(Buffer.from(f
 export const MIN_ASSETS = 2;
 export const PRICED_MAX_ASSETS = 4;
 
-// Demo defaults.
-export const REBALANCE_THRESHOLD_BPS = 100; // 1% drift
-export const REBALANCE_INTERVAL_SECS = 30;
+// Demo defaults — low so a deposit/skew visibly triggers a keeper rebalance fast.
+export const REBALANCE_THRESHOLD_BPS = 50; // 0.5% drift
+export const REBALANCE_INTERVAL_SECS = 5;
 
 export const explorer = (kind: "address" | "tx", id: string): string =>
   `https://explorer.solana.com/${kind}/${id}?cluster=devnet`;

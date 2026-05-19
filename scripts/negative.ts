@@ -2,7 +2,7 @@ import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { getConnection, getProgram, loadKeypair } from "../sdk/src/client.js";
-import { basketMintPda, basketPda, ownerAta } from "../sdk/src/pdas.js";
+import { basketMintPda, basketPda, ownerAta, registryPda } from "../sdk/src/pdas.js";
 import { createBasketRemaining, depositRemaining } from "../sdk/src/accounts.js";
 import { loadBasketsConfig, pickBasket, pk } from "../sdk/src/config.js";
 import { sendWithPyth } from "../sdk/src/pyth.js";
@@ -47,6 +47,7 @@ async function main() {
         creator,
         basket,
         basketMint: basketMintPda(basket),
+        registry: registryPda(),
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,

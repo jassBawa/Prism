@@ -1,23 +1,31 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
-import { COLORS } from "@/lib/constants";
-import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type BasketView } from "@/lib/program";
+import { RPC_URL } from "@/lib/constants";
+import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta } from "@/lib/program";
 import { computeState } from "@/lib/math";
 import { depositRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
-import { CreateBasket } from "./CreateBasket";
+import { timeAgo } from "@/lib/format";
+import type { Live, Toast, ToastKind } from "@/lib/types";
+import { DashboardHeader } from "./dashboard/DashboardHeader";
+import { PortfolioOverview } from "./dashboard/PortfolioOverview";
+import { BasketGrid } from "./dashboard/BasketGrid";
+import { BasketDetail } from "./dashboard/BasketDetail";
+import { CreateBasket } from "./dashboard/CreateBasket";
+import { Toasts } from "./dashboard/Toasts";
+import { IconRefresh } from "./ui/icons";
 
-interface Live {
-  view: BasketView;
-  navUsd: number;
-  weightsBps: number[];
-  supply: number;
-}
+const NETWORK = RPC_URL.includes("127.0.0.1") || RPC_URL.includes("localhost")
+  ? "Localnet"
+  : RPC_URL.includes("devnet")
+    ? "Devnet"
+    : RPC_URL.includes("mainnet")
+      ? "Mainnet"
+      : "Custom RPC";
 
 export function Dashboard() {
   const { connection } = useConnection();
@@ -27,9 +35,23 @@ export function Dashboard() {
   const [depAmt, setDepAmt] = useState("100");
   const [wdAmt, setWdAmt] = useState("10");
   const [userBasket, setUserBasket] = useState(0);
-  const [busy, setBusy] = useState(false);
-  const [log, setLog] = useState("");
+  const [holdingsUsd, setHoldingsUsd] = useState(0);
+  const [busy, setBusy] = useState<"deposit" | "withdraw" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState(0);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const toastId = useRef(0);
+
+  const pushToast = useCallback((kind: ToastKind, msg: string, sub?: string) => {
+    const id = ++toastId.current;
+    setToasts((cur) => [...cur, { id, kind, msg, sub }]);
+    const ttl = kind === "err" ? 9000 : 6000;
+    setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), ttl);
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id: number) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
 
   const tokenBal = useCallback(
     async (acc: PublicKey): Promise<bigint> => {
@@ -54,17 +76,38 @@ export function Dashboard() {
         const pricesUsd = b.assets.map((a) => prices[a.feedHex] ?? 0);
         const st = computeState(balances, pricesUsd, b.assets);
         const sup = await connection.getTokenSupply(b.basketMint).catch(() => null);
-        out.push({ view: b, navUsd: st.navUsd, weightsBps: st.weightsBps, supply: sup?.value.uiAmount ?? 0 });
+        out.push({
+          view: b,
+          navUsd: st.navUsd,
+          weightsBps: st.weightsBps,
+          supply: sup?.value.uiAmount ?? 0,
+          maxDriftBps: st.maxDriftBps,
+        });
       }
       setLives(out);
       const selPk = selected ?? out[0]?.view.pubkey.toBase58() ?? null;
       if (selPk !== selected) setSelected(selPk);
 
-      const cur = out.find((l) => l.view.pubkey.toBase58() === selPk);
-      if (wallet && cur) setUserBasket(Number(await tokenBal(ownerAta(wallet.publicKey, cur.view.basketMint))) / 1e6);
-      else setUserBasket(0);
+      if (wallet) {
+        let total = 0;
+        let selBal = 0;
+        for (const l of out) {
+          const shares = Number(await tokenBal(ownerAta(wallet.publicKey, l.view.basketMint))) / 1e6;
+          const unit = l.supply > 0 ? l.navUsd / l.supply : 1;
+          total += shares * unit;
+          if (l.view.pubkey.toBase58() === selPk) selBal = shares;
+        }
+        setHoldingsUsd(total);
+        setUserBasket(selBal);
+      } else {
+        setHoldingsUsd(0);
+        setUserBasket(0);
+      }
+      setUpdatedAt(Date.now());
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoading(false);
     }
   }, [connection, wallet, selected, tokenBal]);
 
@@ -77,11 +120,12 @@ export function Dashboard() {
   }, [refresh]);
 
   const sel = lives.find((l) => l.view.pubkey.toBase58() === selected) ?? null;
+  const quoteSym = sel?.view.assets[sel.view.quoteIndex]?.symbol ?? "USDC";
 
   const deposit = async () => {
     if (!wallet || !sel) return;
-    setBusy(true);
-    setLog("posting Pyth prices + depositing…");
+    setBusy("deposit");
+    pushToast("info", "Posting Pyth prices & depositing…", "approve in your wallet");
     try {
       const program = getProgram(wallet, connection);
       const me = wallet.publicKey;
@@ -106,19 +150,19 @@ export function Dashboard() {
           .remainingAccounts(depositRemaining(b.pubkey, b.assets, priceFor))
           .instruction(),
       ]);
-      setLog(`✅ deposited. ${sigs[sigs.length - 1]?.slice(0, 16)}…`);
+      pushToast("ok", `Deposited ${depAmt} ${quoteSym}`, sigs[sigs.length - 1]?.slice(0, 24) + "…");
       await refresh();
     } catch (e) {
-      setLog("deposit failed: " + (e as Error).message);
+      pushToast("err", "Deposit failed", (e as Error).message);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
   const withdraw = async () => {
     if (!wallet || !sel) return;
-    setBusy(true);
-    setLog("withdrawing (in-kind)…");
+    setBusy("withdraw");
+    pushToast("info", "Withdrawing in-kind…", "approve in your wallet");
     try {
       const program = getProgram(wallet, connection);
       const me = wallet.publicKey;
@@ -137,109 +181,71 @@ export function Dashboard() {
         .remainingAccounts(withdrawRemaining(b.pubkey, me, b.assets))
         .preInstructions(ataIxs)
         .rpc();
-      setLog(`✅ withdrew. ${sig.slice(0, 16)}…`);
+      pushToast("ok", `Withdrew ${wdAmt} shares`, sig.slice(0, 24) + "…");
       await refresh();
     } catch (e) {
-      setLog("withdraw failed: " + (e as Error).message);
+      pushToast("err", "Withdraw failed", (e as Error).message);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
-  const quoteSym = sel?.view.assets[sel.view.quoteIndex]?.symbol ?? "USDC";
-
   return (
-    <div className="wrap">
-      <div className="row">
-        <div>
-          <div className="title">mini-symmetry</div>
-          <div className="sub">on-chain index-fund protocol · compose your own basket</div>
+    <div className="app">
+      <DashboardHeader network={NETWORK} onToast={pushToast} onFunded={refresh} />
+
+      <main className="container">
+        <div className="page-head">
+          <h1>Dashboard</h1>
+          <p>Compose, fund, and rebalance on-chain index baskets. Live NAV is priced from Pyth feeds.</p>
         </div>
-        <WalletMultiButton />
-      </div>
 
-      <CreateBasket baskets={lives.map((l) => l.view)} onCreated={refresh} />
+        <PortfolioOverview lives={lives} holdingsUsd={holdingsUsd} connected={!!wallet} loading={loading} />
 
-      <div className="card">
-        <h3>Baskets ({lives.length})</h3>
-        {lives.length === 0 && <div className="muted">No baskets yet — create one above.</div>}
-        <div className="bgrid">
-          {lives.map((l) => {
-            const b = l.view;
-            const price = l.supply > 0 ? l.navUsd / l.supply : 1;
-            const on = selected === b.pubkey.toBase58();
-            return (
-              <button key={b.pubkey.toBase58()} className={"bcard" + (on ? " on" : "")} onClick={() => setSelected(b.pubkey.toBase58())}>
-                <div className="brow">
-                  <b>{b.assets.map((a) => a.symbol).join(" / ")}</b>
-                  <span className="muted">#{b.id}</span>
-                </div>
-                <div className="brow">
-                  <span className="muted">NAV</span>
-                  <b>${l.navUsd.toFixed(2)}</b>
-                </div>
-                <div className="brow">
-                  <span className="muted">price</span>
-                  <span>${price.toFixed(4)}</span>
-                </div>
-                <div className="wbars">
-                  {b.assets.map((a, i) => (
-                    <div className="wbar" key={i} title={`${a.symbol} ${(l.weightsBps[i] ?? 0) / 100}% / ${a.targetWeightBps / 100}%`}>
-                      <span style={{ width: `${Math.min(100, (l.weightsBps[i] ?? 0) / 100)}%`, background: COLORS[a.symbol] }} />
-                    </div>
-                  ))}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {sel && (
-        <div className="card">
-          <h3>
-            {sel.view.assets.map((a) => a.symbol).join(" / ")} — basket #{sel.view.id} {sel.view.paused ? "⏸ paused" : ""}
-          </h3>
-          {sel.view.assets.map((a, i) => {
-            const curW = (sel.weightsBps[i] ?? 0) / 100;
-            const tgt = a.targetWeightBps / 100;
-            return (
-              <div className="barrow" key={a.mint.toBase58()}>
-                <div className="tag" style={{ color: COLORS[a.symbol] }}>
-                  {a.symbol}
-                </div>
-                <div className="bar" title={`current ${curW.toFixed(1)}% / target ${tgt}%`}>
-                  <span style={{ width: `${Math.min(100, curW)}%`, background: COLORS[a.symbol] }} />
-                </div>
-                <div className="muted">
-                  {curW.toFixed(1)}% <span style={{ opacity: 0.6 }}>/ {tgt}%</span>
-                </div>
-              </div>
-            );
-          })}
-          <div className="muted" style={{ marginTop: 8 }}>
-            NAV ${sel.navUsd.toFixed(2)} · supply {sel.supply.toFixed(3)} · your balance {userBasket.toFixed(3)} · quote {quoteSym}
-          </div>
-
-          <div className="actions" style={{ marginTop: 12 }}>
-            <div className="sub-card">
-              <h3>Deposit {quoteSym}</h3>
-              <input value={depAmt} onChange={(e) => setDepAmt(e.target.value)} inputMode="decimal" />
-              <button className="act" disabled={!wallet || busy} onClick={deposit}>
-                {wallet ? "Deposit" : "Connect wallet"}
-              </button>
+        <section className="section">
+          <div className="section-head">
+            <div className="section-title">
+              Your baskets <span className="count">{lives.length}</span>
             </div>
-            <div className="sub-card">
-              <h3>Withdraw (in-kind)</h3>
-              <input value={wdAmt} onChange={(e) => setWdAmt(e.target.value)} inputMode="decimal" />
-              <button className="act" disabled={!wallet || busy} onClick={withdraw}>
-                {wallet ? "Withdraw" : "Connect wallet"}
-              </button>
-            </div>
+            {updatedAt > 0 && (
+              <span className="updated">
+                <IconRefresh width={13} height={13} />
+                Updated {timeAgo(updatedAt)}
+              </span>
+            )}
           </div>
-          {log && <div className="log">{log}</div>}
-        </div>
-      )}
+          <BasketGrid lives={lives} selected={selected} loading={loading} onSelect={setSelected} />
+        </section>
+
+        {sel && (
+          <section className="section">
+            <BasketDetail
+              live={sel}
+              quoteSym={quoteSym}
+              userBalance={userBasket}
+              depAmt={depAmt}
+              wdAmt={wdAmt}
+              setDepAmt={setDepAmt}
+              setWdAmt={setWdAmt}
+              busy={busy}
+              connected={!!wallet}
+              onDeposit={deposit}
+              onWithdraw={withdraw}
+            />
+          </section>
+        )}
+
+        <section className="section">
+          <CreateBasket
+            baskets={lives.map((l) => l.view)}
+            onCreated={refresh}
+            onToast={pushToast}
+            defaultOpen={!loading && lives.length === 0}
+          />
+        </section>
+      </main>
+
+      <Toasts items={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

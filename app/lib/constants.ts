@@ -2,6 +2,8 @@ import { PublicKey } from "@solana/web3.js";
 
 export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:8899";
 export const PROGRAM_ID = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID || "8TrJeQaHV4yXgPkNeZXR1pdWbEMXvnpLMYZpk1qX3jbe");
+// The ops faucet base URL (empty = hide the "Get test funds" button, e.g. local dev).
+export const FAUCET_URL = process.env.NEXT_PUBLIC_FAUCET_URL || "";
 
 export const MIN_ASSETS = 2;
 export const PRICED_MAX_ASSETS = 4;
@@ -43,3 +45,10 @@ export const COLORS: Record<string, string> = {
   BONK: "#f5a623",
   USDC: "var(--usdc)",
 };
+
+const FALLBACK_PALETTE = ["#6e8bff", "#a78bfa", "#34d399", "#f5a623", "#f472b6", "#22d3ee"];
+
+/** Stable color for any asset symbol (known assets keep their brand color). */
+export function assetColor(symbol: string, index = 0): string {
+  return COLORS[symbol] ?? FALLBACK_PALETTE[index % FALLBACK_PALETTE.length]!;
+}

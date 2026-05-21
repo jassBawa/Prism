@@ -6,6 +6,11 @@
   "license": "ISC",
   "description": "A minimal on-chain index-fund / basket protocol on Solana (devnet)",
   "scripts": {
+    "setup": "pnpm install && pnpm --dir app install",
+    "dev": "pnpm --dir app dev",
+    "dev:rpc": "pnpm app:env && pnpm --dir app dev",
+    "dev:local": "RPC_URL=http://127.0.0.1:8899 pnpm app:env && pnpm --dir app dev",
+    "fund": "tsx scripts/faucet.ts",
     "seed": "tsx scripts/seed.ts",
     "deposit": "tsx scripts/deposit.ts",
     "withdraw": "tsx scripts/withdraw.ts",

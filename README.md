@@ -158,9 +158,49 @@ landing/                  marketing landing page
 
 ---
 
-## Run it locally
+## Run it
 
-Local validator via [surfpool](https://github.com/txtx/surfpool) (forks mainnet so real Pyth feeds exist):
+### Quickstart — the app, against live devnet (2 commands)
+
+The program is already deployed and seeded on devnet, so you don't need a validator, a deploy, or a seed to try it:
+
+```sh
+pnpm setup     # install root + app deps (one time)
+pnpm dev       # dashboard on http://localhost:3001, pointed at live devnet
+```
+
+Open it, set your wallet to **Devnet**, connect — you can browse the live baskets and their weights/NAV immediately. The deployment (program id + test mints + devnet RPC) is baked into `app/lib/constants.ts`, so this works with **zero config**.
+
+To **deposit**, your wallet needs test funds. Fund it from the CLI (mints play-money USDC + airdrops SOL using the admin key in `.keys/`):
+
+```sh
+pnpm fund <YOUR_WALLET_PUBKEY>        # ~5 SOL + 1000 test USDC
+```
+
+Want a snappier RPC? Drop a free Helius devnet key in and re-point the app:
+
+```sh
+RPC_URL=https://devnet.helius-rpc.com/?api-key=XXXX pnpm dev:rpc
+```
+
+`pnpm fund` needs `.keys/admin.json` (the deployment's mint authority). It's gitignored; ask the maintainer if you're running a fresh clone against this deployment, or stand up your own with the full local stack below.
+
+### Common scripts
+
+| Command | Does |
+|---------|------|
+| `pnpm dev` | run the dashboard against live devnet |
+| `pnpm fund <pubkey>` | airdrop SOL + mint test USDC to a wallet |
+| `pnpm skew` | force drift on a basket (so a rebalance visibly fires) |
+| `pnpm show` | list the on-chain baskets |
+| `pnpm keeper` | run the auto-rebalance loop |
+| `pnpm ops` | keeper + faucet HTTP service (the hosted-demo backend) |
+| `pnpm test` | NAV/rounding math unit tests |
+| `pnpm negative` | guard-rejection suite (every guard must reject) |
+
+### Advanced — full local stack
+
+Run the whole protocol on a local validator (via [surfpool](https://github.com/txtx/surfpool), which forks mainnet so real Pyth feeds exist) when you want to deploy/seed your own instance:
 
 ```sh
 # 1. local validator forking mainnet, on :8899
@@ -175,18 +215,14 @@ solana program deploy target/deploy/mini_symmetry.so \
 
 # 3. seed registry, allowlist, test mints, demo baskets, keeper reserves
 export RPC_URL=http://127.0.0.1:8899
-pnpm run seed
-pnpm run show                          # sanity: list baskets
+pnpm seed && pnpm show
 
-# 4. start keeper + faucet, point the app at them
-pnpm run ops &                         # keeper + faucet on :8080
-RPC_URL=$RPC_URL FAUCET_URL=http://127.0.0.1:8080 pnpm run app:env
-
-# 5. dashboard
-cd app && pnpm dev                     # http://localhost:3001
+# 4. keeper + faucet, then run the app against local
+pnpm ops &                             # keeper + faucet on :8080
+FAUCET_URL=http://127.0.0.1:8080 pnpm dev:local   # writes app/.env.local → localhost, starts app
 ```
 
-Handy scripts: `pnpm run skew` forces drift on demand (for demos), `pnpm run negative` runs the guard-rejection suite, `pnpm test` runs the math unit tests. Full devnet deploy steps live in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+Full devnet deploy steps live in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ---
 

@@ -7,7 +7,23 @@
 [![Solana](https://img.shields.io/badge/Solana-devnet-9945FF)](https://solana.com)
 [![Anchor](https://img.shields.io/badge/Anchor-0.32-512BD4)](https://www.anchor-lang.com)
 [![Oracle](https://img.shields.io/badge/Oracle-Pyth%20pull-6E56CF)](https://pyth.network)
-[![Status](https://img.shields.io/badge/status-live%20on%20devnet-22c55e)](#live-demo)
+[![Status](https://img.shields.io/badge/status-in%20development-f5a623)](#project-status)
+
+> 🚧 **In active development.** The full loop works end-to-end on **devnet**, but Prism is **not production-ready** — devnet only, unaudited, with a single centralized keeper and mock swaps. Don't use real funds. See [Project status](#project-status) for what's shipped vs. in progress.
+
+---
+
+## Project status
+
+**Phase:** working devnet prototype — core protocol shipped, hardening the swap + keeper layers next.
+
+| | |
+|---|---|
+| ✅ **Shipped** | On-chain program (registry, allowlist, create-basket, deposit, withdraw, rebalance, admin) · Pyth pull-oracle pricing with staleness/confidence guards · user-created 2–4 asset baskets · NAV-priced deposits · in-kind withdrawals · keeper auto-rebalance loop · multi-basket dashboard · self-serve faucet + hosted ops · negative tests for every guard · full deposit→rebalance→withdraw loop on devnet |
+| 🔨 **In progress (now)** | Real DEX execution — routing rebalance swaps through **Jupiter v6** (replacing the devnet `mock_swap`) behind the same interface · **slippage caps + circuit breaker** on swaps · hardening the keeper (retries, multi-basket scheduling) · refreshing/stabilizing the public devnet deployment |
+| 🗓️ **Planned** | Management/creator fees · NAV history + APR analytics · permissionless keeper network (bounties) · oracle-spread rebalancing (arbitrageurs rebalance for free) · fund-as-LP earning fees for holders · intents (conditional/scheduled rebalances) · mainnet-beta + external audit |
+
+Full roadmap detail in [What's next](#whats-next).
 
 ---
 
@@ -17,7 +33,7 @@ Buying a balanced portfolio on-chain is tedious: pick the assets, size each trad
 
 > *"I deposit USDC. I get a single **basket token** representing SOL / JUP / BONK at target weights. Prices move, the basket drifts, a keeper bot rebalances it back to target — automatically. I withdraw anytime and get my pro-rata share of the underlying assets back."*
 
-That full loop — **deposit → auto-rebalance → withdraw** — runs live on devnet today, with **any visitor's own wallet** and no CLI.
+That full loop — **deposit → auto-rebalance → withdraw** — works end-to-end on devnet today, driven from the dashboard with **your own wallet** and no CLI.
 
 ---
 

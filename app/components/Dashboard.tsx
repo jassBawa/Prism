@@ -196,8 +196,15 @@ export function Dashboard() {
 
       <main className="container">
         <div className="page-head">
-          <h1>Dashboard</h1>
-          <p>Compose, fund, and rebalance on-chain index baskets. Live NAV is priced from Pyth feeds.</p>
+          <div>
+            <span className="page-kicker">Prism console</span>
+            <h1>Portfolio dashboard</h1>
+            <p>Compose, fund, and rebalance on-chain index baskets. Live NAV is priced from Pyth feeds.</p>
+          </div>
+          <div className="page-actions" aria-label="Dashboard status">
+            <span>Live Pyth pricing</span>
+            <span>Auto-refreshing</span>
+          </div>
         </div>
 
         <PortfolioOverview lives={lives} holdingsUsd={holdingsUsd} connected={!!wallet} loading={loading} />

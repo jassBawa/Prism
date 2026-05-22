@@ -19,7 +19,7 @@ export function DashboardHeader({ network, onToast, onFunded }: Props) {
             <IconLayers width={18} height={18} stroke="#060810" strokeWidth={2} />
           </span>
           <div>
-            <div className="brand-name">mini&#8209;symmetry</div>
+            <div className="brand-name">Prism</div>
             <div className="brand-tag">on-chain index baskets</div>
           </div>
         </div>

@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "mini-symmetry · dashboard",
+  title: "Prism · Dashboard",
   description: "A minimal on-chain index-fund / basket protocol on Solana",
 };
 

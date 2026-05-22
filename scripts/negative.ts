@@ -1,6 +1,6 @@
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, createMint, getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { getConnection, getProgram, loadKeypair } from "../sdk/src/client.js";
 import { basketMintPda, basketPda, ownerAta, registryPda } from "../sdk/src/pdas.js";
 import { createBasketRemaining, depositRemaining } from "../sdk/src/accounts.js";
@@ -74,7 +74,10 @@ async function main() {
   const b = pickBasket(cfg);
   const basket = pk(b.basket);
   const quote = b.assets[b.quoteIndex]!;
-  const depositorBasket = getAssociatedTokenAddressSync(pk(b.basketMint), creator);
+  // The depositor's basket-token ATA must exist, else Anchor rejects with
+  // AccountNotInitialized before the handler's vault check runs — ensure it so
+  // the BadVault guard is what's actually exercised.
+  const depositorBasket = (await getOrCreateAssociatedTokenAccount(conn, admin, pk(b.basketMint), creator)).address;
   const depositorQuote = ownerAta(creator, pk(quote.mint));
   await expectFail("substituted vault (deposit)", "BadVault", () =>
     sendWithPyth(conn, admin, b.assets.map((a) => a.feed), (priceFor) => {

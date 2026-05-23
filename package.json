@@ -10,7 +10,6 @@
     "dev": "pnpm --dir app dev",
     "dev:rpc": "pnpm app:env && pnpm --dir app dev",
     "dev:local": "RPC_URL=http://127.0.0.1:8899 pnpm app:env && pnpm --dir app dev",
-    "fund": "tsx scripts/faucet.ts",
     "seed": "tsx scripts/seed.ts",
     "deposit": "tsx scripts/deposit.ts",
     "withdraw": "tsx scripts/withdraw.ts",
@@ -20,7 +19,6 @@
     "ops": "tsx ops/index.ts",
     "show": "tsx scripts/show.ts",
     "negative": "tsx scripts/negative.ts",
-    "faucet": "tsx scripts/faucet.ts",
     "app:env": "tsx scripts/app-env.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
@@ -39,6 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "litesvm": "^0.8.0",
     "prettier": "^3.3.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"

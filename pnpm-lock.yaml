@@ -33,6 +33,9 @@ importers:
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.19
+      litesvm:
+        specifier: ^0.8.0
+        version: 0.8.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       prettier:
         specifier: ^3.3.3
         version: 3.8.3
@@ -686,6 +689,50 @@ packages:
 
   json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
+
+  litesvm-darwin-arm64@0.8.0:
+    resolution: {integrity: sha512-XYa0oOA7FVbMYKvIDbBznWUjkHQD8J/fn5kPMBSX4QWf4yfFda/+L4JHeSngx+dBCM0LyEyLeakVrnmdR1KYPQ==}
+    engines: {node: '>= 20'}
+    cpu: [arm64]
+    os: [darwin]
+
+  litesvm-darwin-x64@0.8.0:
+    resolution: {integrity: sha512-lrxU6VXEqY7MHHIskdjB88xM9OiGR2ZcXf+fMESnetCk6rVUM6Llfb386wsMiqvi1+DowJwShxluBsCutWo2Sw==}
+    engines: {node: '>= 20'}
+    cpu: [x64]
+    os: [darwin]
+
+  litesvm-linux-arm64-gnu@0.8.0:
+    resolution: {integrity: sha512-D0pdYTQkoibPCfza2x1urSjIpHdwHVagHs0fBMHpzxSEvXND2qqDR3jXYf6xcE0sAq0knXjQmGz7WzP/HhFeFw==}
+    engines: {node: '>= 20'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  litesvm-linux-arm64-musl@0.8.0:
+    resolution: {integrity: sha512-g7vgYPJZC6cT1gaWA1M2SbZu+Sngs9FuxsybDSE1Mmelmaejlguf7X/ymUuhehaSjEY+QSi+ydWtwzgE95JL0w==}
+    engines: {node: '>= 20'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  litesvm-linux-x64-gnu@0.8.0:
+    resolution: {integrity: sha512-nn599p+XuOJoQN2XTSaY4Yz1ZqYxLNUbvt30kImuRUs2ZlIv5FANzM+VUsZgSzWV0phW8m6stX3mpdVv0iIuFQ==}
+    engines: {node: '>= 20'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  litesvm-linux-x64-musl@0.8.0:
+    resolution: {integrity: sha512-UH4v1GM4hNOjEIzx/dBZQ5mxWGFOd85qs7IBou070dLjH0vdZMh4avQCQyc127+A7aRfdc8+wK7t4SEIn4EEgw==}
+    engines: {node: '>= 20'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  litesvm@0.8.0:
+    resolution: {integrity: sha512-P0Ly11FSr1f77bKwaRf0VQQZYdsw6Oi3OLKBxgBN5iJcB7W7lTjFB1tnVcJqdn1NMz6upqU/04rZFCC/JfYBWg==}
+    engines: {node: '>= 20'}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -1570,6 +1617,41 @@ snapshots:
       - utf-8-validate
 
   json-stringify-safe@5.0.1: {}
+
+  litesvm-darwin-arm64@0.8.0:
+    optional: true
+
+  litesvm-darwin-x64@0.8.0:
+    optional: true
+
+  litesvm-linux-arm64-gnu@0.8.0:
+    optional: true
+
+  litesvm-linux-arm64-musl@0.8.0:
+    optional: true
+
+  litesvm-linux-x64-gnu@0.8.0:
+    optional: true
+
+  litesvm-linux-x64-musl@0.8.0:
+    optional: true
+
+  litesvm@0.8.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6):
+    dependencies:
+      '@solana/web3.js': 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      fastestsmallesttextencoderdecoder: 1.0.22
+    optionalDependencies:
+      litesvm-darwin-arm64: 0.8.0
+      litesvm-darwin-x64: 0.8.0
+      litesvm-linux-arm64-gnu: 0.8.0
+      litesvm-linux-arm64-musl: 0.8.0
+      litesvm-linux-x64-gnu: 0.8.0
+      litesvm-linux-x64-musl: 0.8.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
 
   lodash.camelcase@4.3.0: {}
 

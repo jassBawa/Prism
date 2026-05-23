@@ -17,6 +17,9 @@ pub fn create_basket_handler<'info>(
     quote_index: u8,
     weights_bps: Vec<u16>,
     rebalance_threshold_bps: u16,
+    rebalance_threshold_rel_bps: u16,
+    rebalance_spread_bps: u16,
+    deposit_fee_bps: u16,
     rebalance_interval_secs: i64,
 ) -> Result<()> {
     let n = num_assets as usize;
@@ -24,6 +27,9 @@ pub fn create_basket_handler<'info>(
     require!(weights_bps.len() == n, MsError::BadWeights);
     require!((quote_index as usize) < n, MsError::BadQuoteIndex);
     require!(rebalance_threshold_bps >= MIN_THRESHOLD_BPS, MsError::BadParams);
+    require!(rebalance_threshold_rel_bps >= MIN_THRESHOLD_BPS, MsError::BadParams);
+    require!(rebalance_spread_bps <= MAX_SPREAD_BPS, MsError::BadParams);
+    require!(deposit_fee_bps <= MAX_FEE_BPS, MsError::BadParams);
     require!(rebalance_interval_secs >= MIN_INTERVAL_SECS, MsError::BadParams);
     require!(ctx.remaining_accounts.len() == 3 * n, MsError::BadRemainingAccounts);
 
@@ -110,6 +116,9 @@ pub fn create_basket_handler<'info>(
     b.quote_index = quote_index;
     b.assets = assets;
     b.rebalance_threshold_bps = rebalance_threshold_bps;
+    b.rebalance_threshold_rel_bps = rebalance_threshold_rel_bps;
+    b.rebalance_spread_bps = rebalance_spread_bps;
+    b.deposit_fee_bps = deposit_fee_bps;
     b.rebalance_interval_secs = rebalance_interval_secs;
     b.last_rebalance_ts = 0;
     b.paused = false;

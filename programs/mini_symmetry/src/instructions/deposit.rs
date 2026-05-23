@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, MintTo, Token, TokenAccount, Transfer};
 
-use crate::constants::{BASKET_SEED, MAX_ASSETS, VIRTUAL_OFFSET};
+use crate::constants::{BASKET_SEED, BPS, MAX_ASSETS, VIRTUAL_OFFSET};
 use crate::error::MsError;
 use crate::events::Deposited;
 use crate::pricing::{read_price, token_value_micro};
@@ -22,6 +22,7 @@ pub fn deposit_handler<'info>(
     let qi = ctx.accounts.basket.quote_index as usize;
     let assets = ctx.accounts.basket.assets;
     let authority = ctx.accounts.basket.authority;
+    let deposit_fee_bps = ctx.accounts.basket.deposit_fee_bps as u128;
     let id_bytes = ctx.accounts.basket.id.to_le_bytes();
     let bump = ctx.accounts.basket.bump;
     let basket_key = ctx.accounts.basket.key();
@@ -52,6 +53,13 @@ pub fn deposit_handler<'info>(
         .map_err(|_| MsError::MathOverflow)?;
     require!(mint_amount > 0, MsError::ZeroMint);
 
+    // Creator deposit fee: route a `deposit_fee_bps` slice of the newly minted basket
+    // tokens to the creator; the depositor gets the rest. Floors, so a tiny deposit
+    // with a 0-rounded fee mints everything to the depositor.
+    let fee: u64 = ((mint_amount as u128) * deposit_fee_bps / BPS) as u64;
+    let user_mint = mint_amount - fee;
+    require!(user_mint > 0, MsError::ZeroMint);
+
     // pull quote: depositor -> quote vault (= remaining_accounts[quote_index]).
     token::transfer(
         CpiContext::new(
@@ -77,14 +85,31 @@ pub fn deposit_handler<'info>(
             },
             &[seeds],
         ),
-        mint_amount,
+        user_mint,
     )?;
+
+    // mint the fee slice to the creator's basket-token ATA (skip when it rounds to 0).
+    if fee > 0 {
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    mint: ctx.accounts.basket_mint.to_account_info(),
+                    to: ctx.accounts.creator_basket.to_account_info(),
+                    authority: ctx.accounts.basket.to_account_info(),
+                },
+                &[seeds],
+            ),
+            fee,
+        )?;
+    }
 
     emit!(Deposited {
         depositor: ctx.accounts.depositor.key(),
         basket: basket_key,
         quote_amount,
         minted: mint_amount,
+        fee,
         nav_before: nav_before as u64,
     });
     Ok(())
@@ -101,5 +126,9 @@ pub struct Deposit<'info> {
     pub depositor_quote: Box<Account<'info, TokenAccount>>,
     #[account(mut, token::mint = basket.basket_mint, token::authority = depositor)]
     pub depositor_basket: Box<Account<'info, TokenAccount>>,
+    /// Creator's basket-token ATA — receives the deposit fee. Must already exist
+    /// (clients pre-create it); bound to the creator via `basket.authority`.
+    #[account(mut, token::mint = basket.basket_mint, token::authority = basket.authority)]
+    pub creator_basket: Box<Account<'info, TokenAccount>>,
     pub token_program: Program<'info, Token>,
 }

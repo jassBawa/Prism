@@ -20,6 +20,7 @@ pub struct Deposited {
     pub basket: Pubkey,
     pub quote_amount: u64,
     pub minted: u64,
+    pub fee: u64,
     pub nav_before: u64,
 }
 

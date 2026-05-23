@@ -13,16 +13,7 @@
         "Create a basket from `num_assets` supported assets + target weights.",
         "`remaining_accounts`: for each asset i, the triple [mint_i, supported_i, vault_i]."
       ],
-      "discriminator": [
-        47,
-        105,
-        155,
-        148,
-        15,
-        169,
-        202,
-        211
-      ],
+      "discriminator": [47, 105, 155, 148, 15, 169, 202, 211],
       "accounts": [
         {
           "name": "creator",
@@ -36,14 +27,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  98,
-                  97,
-                  115,
-                  107,
-                  101,
-                  116
-                ]
+                "value": [98, 97, 115, 107, 101, 116]
               },
               {
                 "kind": "account",
@@ -63,12 +47,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  109,
-                  105,
-                  110,
-                  116
-                ]
+                "value": [109, 105, 110, 116]
               },
               {
                 "kind": "account",
@@ -84,16 +63,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  103,
-                  105,
-                  115,
-                  116,
-                  114,
-                  121
-                ]
+                "value": [114, 101, 103, 105, 115, 116, 114, 121]
               }
             ]
           }
@@ -117,7 +87,7 @@
       ],
       "args": [
         {
-          "name": "_id",
+          "name": "id",
           "type": "u64"
         },
         {
@@ -139,6 +109,18 @@
           "type": "u16"
         },
         {
+          "name": "rebalance_threshold_rel_bps",
+          "type": "u16"
+        },
+        {
+          "name": "rebalance_spread_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_fee_bps",
+          "type": "u16"
+        },
+        {
           "name": "rebalance_interval_secs",
           "type": "i64"
         }
@@ -150,16 +132,7 @@
         "Deposit the quote asset; receive basket tokens priced by NAV (before this deposit).",
         "`remaining_accounts`: [vault_0..vault_{n-1}, price_0..price_{n-1}]."
       ],
-      "discriminator": [
-        242,
-        35,
-        198,
-        137,
-        82,
-        225,
-        242,
-        182
-      ],
+      "discriminator": [242, 35, 198, 137, 82, 225, 242, 182],
       "accounts": [
         {
           "name": "basket"
@@ -182,6 +155,14 @@
           "writable": true
         },
         {
+          "name": "creator_basket",
+          "docs": [
+            "Creator's basket-token ATA — receives the deposit fee. Must already exist",
+            "(clients pre-create it); bound to the creator via `basket.authority`."
+          ],
+          "writable": true
+        },
+        {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
@@ -200,16 +181,7 @@
         "baskets with getAccountInfo + getMultipleAccounts — no getProgramAccounts,",
         "which public/forked RPCs throttle or don't serve."
       ],
-      "discriminator": [
-        131,
-        22,
-        4,
-        103,
-        24,
-        94,
-        163,
-        239
-      ],
+      "discriminator": [131, 22, 4, 103, 24, 94, 163, 239],
       "accounts": [
         {
           "name": "admin",
@@ -224,16 +196,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  101,
-                  103,
-                  105,
-                  115,
-                  116,
-                  114,
-                  121
-                ]
+                "value": [114, 101, 103, 105, 115, 116, 114, 121]
               }
             ]
           }
@@ -253,16 +216,7 @@
         "reserve can't cover the delta is skipped, never reverting the whole tx.",
         "`remaining_accounts`: [vault_0.., price_0.., reserve_0..] (three n-blocks)."
       ],
-      "discriminator": [
-        108,
-        158,
-        77,
-        9,
-        210,
-        52,
-        88,
-        62
-      ],
+      "discriminator": [108, 158, 77, 9, 210, 52, 88, 62],
       "accounts": [
         {
           "name": "basket",
@@ -282,16 +236,11 @@
     },
     {
       "name": "set_params",
-      "discriminator": [
-        27,
-        234,
-        178,
-        52,
-        147,
-        2,
-        187,
-        141
+      "docs": [
+        "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
+        "and deposit fee."
       ],
+      "discriminator": [27, 234, 178, 52, 147, 2, 187, 141],
       "accounts": [
         {
           "name": "basket",
@@ -300,9 +249,7 @@
         {
           "name": "authority",
           "signer": true,
-          "relations": [
-            "basket"
-          ]
+          "relations": ["basket"]
         }
       ],
       "args": [
@@ -311,23 +258,27 @@
           "type": "u16"
         },
         {
+          "name": "threshold_rel_bps",
+          "type": "u16"
+        },
+        {
           "name": "interval_secs",
           "type": "i64"
+        },
+        {
+          "name": "spread_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_fee_bps",
+          "type": "u16"
         }
       ]
     },
     {
       "name": "set_paused",
-      "discriminator": [
-        91,
-        60,
-        125,
-        192,
-        176,
-        225,
-        166,
-        218
-      ],
+      "docs": ["Owner: pause / unpause a basket (halts deposit + rebalance)."],
+      "discriminator": [91, 60, 125, 192, 176, 225, 166, 218],
       "accounts": [
         {
           "name": "basket",
@@ -336,9 +287,7 @@
         {
           "name": "authority",
           "signer": true,
-          "relations": [
-            "basket"
-          ]
+          "relations": ["basket"]
         }
       ],
       "args": [
@@ -354,16 +303,7 @@
         "Admin: add or update a supported asset. Binds the mint to its Pyth feed",
         "and reads `decimals` from the real Mint (never trusts a caller arg)."
       ],
-      "discriminator": [
-        79,
-        67,
-        133,
-        132,
-        129,
-        164,
-        92,
-        201
-      ],
+      "discriminator": [79, 67, 133, 132, 129, 164, 92, 201],
       "accounts": [
         {
           "name": "admin",
@@ -381,13 +321,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  97,
-                  115,
-                  115,
-                  101,
-                  116
-                ]
+                "value": [97, 115, 115, 101, 116]
               },
               {
                 "kind": "account",
@@ -405,10 +339,7 @@
         {
           "name": "feed_id",
           "type": {
-            "array": [
-              "u8",
-              32
-            ]
+            "array": ["u8", 32]
           }
         },
         {
@@ -424,16 +355,7 @@
         "Oracle-free, swap-free, atomic — the un-gameable exit.",
         "`remaining_accounts`: [vault_0..vault_{n-1}, user_ata_0..user_ata_{n-1}]."
       ],
-      "discriminator": [
-        183,
-        18,
-        70,
-        156,
-        148,
-        109,
-        161,
-        34
-      ],
+      "discriminator": [183, 18, 70, 156, 148, 109, 161, 34],
       "accounts": [
         {
           "name": "basket"
@@ -467,109 +389,37 @@
   "accounts": [
     {
       "name": "Basket",
-      "discriminator": [
-        219,
-        79,
-        107,
-        135,
-        231,
-        243,
-        218,
-        248
-      ]
+      "discriminator": [219, 79, 107, 135, 231, 243, 218, 248]
     },
     {
       "name": "Registry",
-      "discriminator": [
-        47,
-        174,
-        110,
-        246,
-        184,
-        182,
-        252,
-        218
-      ]
+      "discriminator": [47, 174, 110, 246, 184, 182, 252, 218]
     },
     {
       "name": "SupportedAsset",
-      "discriminator": [
-        129,
-        27,
-        96,
-        192,
-        89,
-        180,
-        227,
-        200
-      ]
+      "discriminator": [129, 27, 96, 192, 89, 180, 227, 200]
     }
   ],
   "events": [
     {
       "name": "BasketCreated",
-      "discriminator": [
-        26,
-        146,
-        108,
-        155,
-        189,
-        85,
-        8,
-        7
-      ]
+      "discriminator": [26, 146, 108, 155, 189, 85, 8, 7]
     },
     {
       "name": "Deposited",
-      "discriminator": [
-        111,
-        141,
-        26,
-        45,
-        161,
-        35,
-        100,
-        57
-      ]
+      "discriminator": [111, 141, 26, 45, 161, 35, 100, 57]
     },
     {
       "name": "Rebalanced",
-      "discriminator": [
-        74,
-        101,
-        57,
-        244,
-        181,
-        179,
-        52,
-        182
-      ]
+      "discriminator": [74, 101, 57, 244, 181, 179, 52, 182]
     },
     {
       "name": "SupportedAssetSet",
-      "discriminator": [
-        53,
-        98,
-        118,
-        75,
-        253,
-        110,
-        99,
-        229
-      ]
+      "discriminator": [53, 98, 118, 75, 253, 110, 99, 229]
     },
     {
       "name": "Withdrawn",
-      "discriminator": [
-        20,
-        89,
-        223,
-        198,
-        194,
-        124,
-        219,
-        13
-      ]
+      "discriminator": [20, 89, 223, 198, 194, 124, 219, 13]
     }
   ],
   "errors": [
@@ -731,10 +581,7 @@
           {
             "name": "feed_id",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {
@@ -784,6 +631,18 @@
           },
           {
             "name": "rebalance_threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "rebalance_threshold_rel_bps",
+            "type": "u16"
+          },
+          {
+            "name": "rebalance_spread_bps",
+            "type": "u16"
+          },
+          {
+            "name": "deposit_fee_bps",
             "type": "u16"
           },
           {
@@ -851,6 +710,10 @@
             "type": "u64"
           },
           {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
             "name": "nav_before",
             "type": "u64"
           }
@@ -906,19 +769,13 @@
           {
             "name": "_pad",
             "type": {
-              "array": [
-                "u8",
-                3
-              ]
+              "array": ["u8", 3]
             }
           },
           {
             "name": "baskets",
             "type": {
-              "array": [
-                "pubkey",
-                256
-              ]
+              "array": ["pubkey", 256]
             }
           }
         ]
@@ -936,10 +793,7 @@
           {
             "name": "feed_id",
             "type": {
-              "array": [
-                "u8",
-                32
-              ]
+              "array": ["u8", 32]
             }
           },
           {

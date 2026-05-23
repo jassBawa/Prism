@@ -145,6 +145,18 @@ export type MiniSymmetry = {
           "type": "u16"
         },
         {
+          "name": "rebalanceThresholdRelBps",
+          "type": "u16"
+        },
+        {
+          "name": "rebalanceSpreadBps",
+          "type": "u16"
+        },
+        {
+          "name": "depositFeeBps",
+          "type": "u16"
+        },
+        {
           "name": "rebalanceIntervalSecs",
           "type": "i64"
         }
@@ -185,6 +197,14 @@ export type MiniSymmetry = {
         },
         {
           "name": "depositorBasket",
+          "writable": true
+        },
+        {
+          "name": "creatorBasket",
+          "docs": [
+            "Creator's basket-token ATA — receives the deposit fee. Must already exist",
+            "(clients pre-create it); bound to the creator via `basket.authority`."
+          ],
           "writable": true
         },
         {
@@ -288,6 +308,10 @@ export type MiniSymmetry = {
     },
     {
       "name": "setParams",
+      "docs": [
+        "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
+        "and deposit fee."
+      ],
       "discriminator": [
         27,
         234,
@@ -317,13 +341,28 @@ export type MiniSymmetry = {
           "type": "u16"
         },
         {
+          "name": "thresholdRelBps",
+          "type": "u16"
+        },
+        {
           "name": "intervalSecs",
           "type": "i64"
+        },
+        {
+          "name": "spreadBps",
+          "type": "u16"
+        },
+        {
+          "name": "depositFeeBps",
+          "type": "u16"
         }
       ]
     },
     {
       "name": "setPaused",
+      "docs": [
+        "Owner: pause / unpause a basket (halts deposit + rebalance)."
+      ],
       "discriminator": [
         91,
         60,
@@ -793,6 +832,18 @@ export type MiniSymmetry = {
             "type": "u16"
           },
           {
+            "name": "rebalanceThresholdRelBps",
+            "type": "u16"
+          },
+          {
+            "name": "rebalanceSpreadBps",
+            "type": "u16"
+          },
+          {
+            "name": "depositFeeBps",
+            "type": "u16"
+          },
+          {
             "name": "rebalanceIntervalSecs",
             "type": "i64"
           },
@@ -854,6 +905,10 @@ export type MiniSymmetry = {
           },
           {
             "name": "minted",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
             "type": "u64"
           },
           {

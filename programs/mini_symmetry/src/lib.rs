@@ -68,6 +68,9 @@ pub mod mini_symmetry {
         quote_index: u8,
         weights_bps: Vec<u16>,
         rebalance_threshold_bps: u16,
+        rebalance_threshold_rel_bps: u16,
+        rebalance_spread_bps: u16,
+        deposit_fee_bps: u16,
         rebalance_interval_secs: i64,
     ) -> Result<()> {
         instructions::create_basket::create_basket_handler(
@@ -77,6 +80,9 @@ pub mod mini_symmetry {
             quote_index,
             weights_bps,
             rebalance_threshold_bps,
+            rebalance_threshold_rel_bps,
+            rebalance_spread_bps,
+            deposit_fee_bps,
             rebalance_interval_secs,
         )
     }
@@ -108,9 +114,24 @@ pub mod mini_symmetry {
         instructions::rebalance::rebalance_handler(ctx)
     }
 
-    /// Owner: set a basket's rebalance threshold + interval.
-    pub fn set_params(ctx: Context<BasketAdmin>, threshold_bps: u16, interval_secs: i64) -> Result<()> {
-        instructions::admin::set_params_handler(ctx, threshold_bps, interval_secs)
+    /// Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,
+    /// and deposit fee.
+    pub fn set_params(
+        ctx: Context<BasketAdmin>,
+        threshold_bps: u16,
+        threshold_rel_bps: u16,
+        interval_secs: i64,
+        spread_bps: u16,
+        deposit_fee_bps: u16,
+    ) -> Result<()> {
+        instructions::admin::set_params_handler(
+            ctx,
+            threshold_bps,
+            threshold_rel_bps,
+            interval_secs,
+            spread_bps,
+            deposit_fee_bps,
+        )
     }
 
     /// Owner: pause / unpause a basket (halts deposit + rebalance).

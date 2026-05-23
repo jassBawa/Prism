@@ -19,6 +19,12 @@ pub const MAX_CONF_BPS: i128 = 200; // reject if conf/price > 2%
 pub const VIRTUAL_OFFSET: u128 = 1_000_000;
 pub const MIN_THRESHOLD_BPS: u16 = 10; // 0.1% — anti-grief floor on rebalance cadence
 pub const MIN_INTERVAL_SECS: i64 = 1;
+/// Max rebalance spread (1%) — the better-than-oracle edge the vault pays the
+/// caller. Caps how much NAV one rebalance can bleed to an arbitrageur.
+pub const MAX_SPREAD_BPS: u16 = 100;
+/// Max creator deposit fee (5%) — slice of newly minted basket tokens routed
+/// to the creator on deposit.
+pub const MAX_FEE_BPS: u16 = 500;
 
 /// Pyth Solana Receiver program — owner of valid PriceUpdateV2 accounts.
 pub const PYTH_RECEIVER_PROGRAM: Pubkey = pubkey!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");

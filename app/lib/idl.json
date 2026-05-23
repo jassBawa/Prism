@@ -117,7 +117,7 @@
       ],
       "args": [
         {
-          "name": "_id",
+          "name": "id",
           "type": "u64"
         },
         {
@@ -136,6 +136,18 @@
         },
         {
           "name": "rebalance_threshold_bps",
+          "type": "u16"
+        },
+        {
+          "name": "rebalance_threshold_rel_bps",
+          "type": "u16"
+        },
+        {
+          "name": "rebalance_spread_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_fee_bps",
           "type": "u16"
         },
         {
@@ -179,6 +191,14 @@
         },
         {
           "name": "depositor_basket",
+          "writable": true
+        },
+        {
+          "name": "creator_basket",
+          "docs": [
+            "Creator's basket-token ATA — receives the deposit fee. Must already exist",
+            "(clients pre-create it); bound to the creator via `basket.authority`."
+          ],
           "writable": true
         },
         {
@@ -282,6 +302,10 @@
     },
     {
       "name": "set_params",
+      "docs": [
+        "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
+        "and deposit fee."
+      ],
       "discriminator": [
         27,
         234,
@@ -311,13 +335,28 @@
           "type": "u16"
         },
         {
+          "name": "threshold_rel_bps",
+          "type": "u16"
+        },
+        {
           "name": "interval_secs",
           "type": "i64"
+        },
+        {
+          "name": "spread_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_fee_bps",
+          "type": "u16"
         }
       ]
     },
     {
       "name": "set_paused",
+      "docs": [
+        "Owner: pause / unpause a basket (halts deposit + rebalance)."
+      ],
       "discriminator": [
         91,
         60,
@@ -787,6 +826,18 @@
             "type": "u16"
           },
           {
+            "name": "rebalance_threshold_rel_bps",
+            "type": "u16"
+          },
+          {
+            "name": "rebalance_spread_bps",
+            "type": "u16"
+          },
+          {
+            "name": "deposit_fee_bps",
+            "type": "u16"
+          },
+          {
             "name": "rebalance_interval_secs",
             "type": "i64"
           },
@@ -848,6 +899,10 @@
           },
           {
             "name": "minted",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
             "type": "u64"
           },
           {

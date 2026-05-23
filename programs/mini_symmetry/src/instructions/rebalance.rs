@@ -20,6 +20,8 @@ pub fn rebalance_handler<'info>(ctx: Context<'_, '_, '_, 'info, Rebalance<'info>
     let qi = ctx.accounts.basket.quote_index as usize;
     let assets = ctx.accounts.basket.assets;
     let threshold = ctx.accounts.basket.rebalance_threshold_bps as u128;
+    let threshold_rel = ctx.accounts.basket.rebalance_threshold_rel_bps as u128;
+    let spread = ctx.accounts.basket.rebalance_spread_bps as u128;
     let interval = ctx.accounts.basket.rebalance_interval_secs;
     let last_ts = ctx.accounts.basket.last_rebalance_ts;
     let authority = ctx.accounts.basket.authority;
@@ -55,17 +57,32 @@ pub fn rebalance_handler<'info>(ctx: Context<'_, '_, '_, 'info, Rebalance<'info>
     }
     require!(nav > 0, MsError::EmptyVault);
 
-    // Max drift across assets (bps of NAV).
+    // Dual drift gate: rebalance only if some asset breaches BOTH the absolute
+    // threshold (share-of-NAV) AND the relative threshold (vs. its own target).
+    //   abs_i = |cur_bps - tgt_bps|                      (bps of NAV)
+    //   rel_i = |value_i - target_value_i| / max(value_i, target_value_i)  (bps)
+    // The absolute gate stops a small wiggle in a big slot from churning; the
+    // relative gate catches a small slot that's far off its own target.
     let mut max_drift_bps: u128 = 0;
+    let mut triggered = false;
     for i in 0..n {
         let cur_bps = value[i] * BPS / nav;
         let tgt_bps = assets[i].target_weight_bps as u128;
-        let d = if cur_bps > tgt_bps { cur_bps - tgt_bps } else { tgt_bps - cur_bps };
-        if d > max_drift_bps {
-            max_drift_bps = d;
+        let abs_d = if cur_bps > tgt_bps { cur_bps - tgt_bps } else { tgt_bps - cur_bps };
+        if abs_d > max_drift_bps {
+            max_drift_bps = abs_d;
+        }
+        let target_value = nav * tgt_bps / BPS;
+        let diff = if value[i] > target_value { value[i] - target_value } else { target_value - value[i] };
+        let denom = core::cmp::max(value[i], target_value);
+        // denom == 0 only when value_i == 0 AND tgt_bps == 0 (a zero-weight slot);
+        // then abs_d == 0 too, so the asset can never trigger — safe.
+        let rel = if denom == 0 { 0 } else { diff * BPS / denom };
+        if abs_d >= threshold && rel >= threshold_rel {
+            triggered = true;
         }
     }
-    require!(max_drift_bps >= threshold, MsError::DriftBelowThreshold);
+    require!(triggered, MsError::DriftBelowThreshold);
 
     let seeds: &[&[u8]] = &[BASKET_SEED, authority.as_ref(), id_bytes.as_ref(), &[bump]];
     let vault_q = &ctx.remaining_accounts[qi];
@@ -86,11 +103,18 @@ pub fn rebalance_handler<'info>(ctx: Context<'_, '_, '_, 'info, Rebalance<'info>
             if delta_amount == 0 {
                 continue;
             }
-            // quote paid = value of the asset amount actually received (floored -> favors vault).
-            let quote_pay: u64 = token_value_micro(delta_amount, assets[i].decimals, px[i], ex[i])?
+            // Vault BUYS asset i: pays the fair value of the amount received PLUS a
+            // `spread` premium, so the caller (any arbitrageur) profits and rebalances
+            // the fund for free. fair_value is floored, favoring the vault.
+            let fair_value = token_value_micro(delta_amount, assets[i].decimals, px[i], ex[i])?;
+            let quote_pay: u64 = fair_value
+                .checked_mul(BPS + spread)
+                .and_then(|x| x.checked_div(BPS))
+                .ok_or(MsError::MathOverflow)?
                 .try_into()
                 .map_err(|_| MsError::MathOverflow)?;
-            // best-effort: skip if the keeper's asset reserve or the quote vault can't cover it.
+            // best-effort: skip if the keeper's asset reserve or the quote vault can't
+            // cover it (checked against the spread-adjusted quote_pay).
             if token_amount(reserve_i)? < delta_amount || bal[qi] < quote_pay {
                 continue;
             }
@@ -125,8 +149,19 @@ pub fn rebalance_handler<'info>(ctx: Context<'_, '_, '_, 'info, Rebalance<'info>
             if delta_amount == 0 {
                 continue;
             }
-            let quote_recv: u64 = delta_value.try_into().map_err(|_| MsError::MathOverflow)?;
-            // best-effort: skip if the asset vault or the keeper's quote reserve can't cover it.
+            // Vault SELLS asset i: asks the fair value of the amount actually sold
+            // (floored to delta_amount) MINUS a `spread` discount, so the caller
+            // profits. Rebasing on delta_amount (not the un-floored delta_value) keeps
+            // the quote consistent with the tokens moved.
+            let fair_recv = token_value_micro(delta_amount, assets[i].decimals, px[i], ex[i])?;
+            let quote_recv: u64 = fair_recv
+                .checked_mul(BPS - spread)
+                .and_then(|x| x.checked_div(BPS))
+                .ok_or(MsError::MathOverflow)?
+                .try_into()
+                .map_err(|_| MsError::MathOverflow)?;
+            // best-effort: skip if the asset vault or the keeper's quote reserve can't
+            // cover it (checked against the spread-adjusted quote_recv).
             if bal[i] < delta_amount || token_amount(reserve_q)? < quote_recv {
                 continue;
             }

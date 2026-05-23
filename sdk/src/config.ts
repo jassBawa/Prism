@@ -20,6 +20,9 @@ export interface BasketEntry {
   basketMint: string;
   quoteIndex: number;
   thresholdBps: number;
+  thresholdRelBps: number;
+  spreadBps: number;
+  feeBps: number;
   intervalSecs: number;
   assets: AssetEntry[];
   vaults: string[]; // vault ATA per asset, same order as assets
@@ -57,7 +60,10 @@ export function pickBasket(cfg: BasketsConfig, basketPk?: string): BasketEntry {
 
 export const pk = (s: string): PublicKey => new PublicKey(s);
 
-export async function rawBalance(conn: Connection, account: PublicKey): Promise<bigint> {
+export async function rawBalance(
+  conn: Connection,
+  account: PublicKey,
+): Promise<bigint> {
   const bal = await conn.getTokenAccountBalance(account).catch(() => null);
   return bal ? BigInt(bal.value.amount) : 0n;
 }

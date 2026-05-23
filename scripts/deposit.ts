@@ -1,5 +1,8 @@
 import { BN } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  getOrCreateAssociatedTokenAccount,
+} from "@solana/spl-token";
 import { getConnection, getProgram, loadKeypair } from "../sdk/src/client.js";
 import { explorer } from "../sdk/src/constants.js";
 import { loadBasketsConfig, pickBasket, pk } from "../sdk/src/config.js";
@@ -19,18 +22,38 @@ async function main() {
   const basket = pk(b.basket);
   const quote = b.assets[b.quoteIndex]!;
 
-  const depositorBasket = (await getOrCreateAssociatedTokenAccount(conn, admin, pk(b.basketMint), depositor)).address;
+  const depositorBasket = (
+    await getOrCreateAssociatedTokenAccount(
+      conn,
+      admin,
+      pk(b.basketMint),
+      depositor,
+    )
+  ).address;
+  // Creator's basket-token ATA receives the deposit fee; ensure it exists.
+  const creatorBasket = (
+    await getOrCreateAssociatedTokenAccount(
+      conn,
+      admin,
+      pk(b.basketMint),
+      pk(b.creator),
+    )
+  ).address;
   const depositorQuote = ownerAta(depositor, pk(quote.mint));
   const amount = new BN(Math.round(AMOUNT * 10 ** quote.decimals));
 
   const basketBal = async (): Promise<number> => {
     try {
-      return (await conn.getTokenAccountBalance(depositorBasket)).value.uiAmount ?? 0;
+      return (
+        (await conn.getTokenAccountBalance(depositorBasket)).value.uiAmount ?? 0
+      );
     } catch {
       return 0;
     }
   };
-  console.log(`Depositing ${AMOUNT} ${quote.key.toUpperCase()} into "${b.label}"...`);
+  console.log(
+    `Depositing ${AMOUNT} ${quote.key.toUpperCase()} into "${b.label}"...`,
+  );
   const before = await basketBal();
 
   const feeds = b.assets.map((a) => a.feed);
@@ -43,6 +66,7 @@ async function main() {
         depositor,
         depositorQuote,
         depositorBasket,
+        creatorBasket,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(depositRemaining(basket, b.assets, priceFor))
@@ -52,7 +76,8 @@ async function main() {
   console.log("tx:", sigs.map((s) => explorer("tx", s)).join("\n    "));
   const after = await basketBal();
   console.log(`basket token: ${before} -> ${after}`);
-  if (after > before) console.log("\n✅ DEPOSIT — basket token minted by NAV (Pyth-priced).");
+  if (after > before)
+    console.log("\n✅ DEPOSIT — basket token minted by NAV (Pyth-priced).");
 }
 
 main().catch((e) => {

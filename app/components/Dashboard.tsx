@@ -3,9 +3,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+} from "@solana/spl-token";
 import { RPC_URL } from "@/lib/constants";
-import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta } from "@/lib/program";
+import {
+  fetchAllBaskets,
+  getProgram,
+  getReadProgram,
+  ownerAta,
+  vaultAta,
+} from "@/lib/program";
 import { computeState } from "@/lib/math";
 import { depositRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
@@ -19,13 +28,14 @@ import { CreateBasket } from "./dashboard/CreateBasket";
 import { Toasts } from "./dashboard/Toasts";
 import { IconRefresh } from "./ui/icons";
 
-const NETWORK = RPC_URL.includes("127.0.0.1") || RPC_URL.includes("localhost")
-  ? "Localnet"
-  : RPC_URL.includes("devnet")
-    ? "Devnet"
-    : RPC_URL.includes("mainnet")
-      ? "Mainnet"
-      : "Custom RPC";
+const NETWORK =
+  RPC_URL.includes("127.0.0.1") || RPC_URL.includes("localhost")
+    ? "Localnet"
+    : RPC_URL.includes("devnet")
+      ? "Devnet"
+      : RPC_URL.includes("mainnet")
+        ? "Mainnet"
+        : "Custom RPC";
 
 export function Dashboard() {
   const { connection } = useConnection();
@@ -43,20 +53,28 @@ export function Dashboard() {
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const toastId = useRef(0);
 
-  const pushToast = useCallback((kind: ToastKind, msg: string, sub?: string) => {
-    const id = ++toastId.current;
-    setToasts((cur) => [...cur, { id, kind, msg, sub }]);
-    const ttl = kind === "err" ? 9000 : 6000;
-    setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), ttl);
-    return id;
-  }, []);
+  const pushToast = useCallback(
+    (kind: ToastKind, msg: string, sub?: string) => {
+      const id = ++toastId.current;
+      setToasts((cur) => [...cur, { id, kind, msg, sub }]);
+      const ttl = kind === "err" ? 9000 : 6000;
+      setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), ttl);
+      return id;
+    },
+    [],
+  );
 
-  const dismissToast = useCallback((id: number) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
+  const dismissToast = useCallback(
+    (id: number) => setToasts((cur) => cur.filter((t) => t.id !== id)),
+    [],
+  );
 
   const tokenBal = useCallback(
     async (acc: PublicKey): Promise<bigint> => {
       try {
-        return BigInt((await connection.getTokenAccountBalance(acc)).value.amount);
+        return BigInt(
+          (await connection.getTokenAccountBalance(acc)).value.amount,
+        );
       } catch {
         return 0n;
       }
@@ -68,14 +86,20 @@ export function Dashboard() {
     try {
       const program = getReadProgram(connection);
       const baskets = await fetchAllBaskets(program);
-      const feeds = [...new Set(baskets.flatMap((b) => b.assets.map((a) => a.feedHex)))];
+      const feeds = [
+        ...new Set(baskets.flatMap((b) => b.assets.map((a) => a.feedHex))),
+      ];
       const prices = feeds.length ? await latestPricesUsd(feeds) : {};
       const out: Live[] = [];
       for (const b of baskets) {
-        const balances = await Promise.all(b.assets.map((a) => tokenBal(vaultAta(b.pubkey, a.mint))));
+        const balances = await Promise.all(
+          b.assets.map((a) => tokenBal(vaultAta(b.pubkey, a.mint))),
+        );
         const pricesUsd = b.assets.map((a) => prices[a.feedHex] ?? 0);
         const st = computeState(balances, pricesUsd, b.assets);
-        const sup = await connection.getTokenSupply(b.basketMint).catch(() => null);
+        const sup = await connection
+          .getTokenSupply(b.basketMint)
+          .catch(() => null);
         out.push({
           view: b,
           navUsd: st.navUsd,
@@ -92,7 +116,10 @@ export function Dashboard() {
         let total = 0;
         let selBal = 0;
         for (const l of out) {
-          const shares = Number(await tokenBal(ownerAta(wallet.publicKey, l.view.basketMint))) / 1e6;
+          const shares =
+            Number(
+              await tokenBal(ownerAta(wallet.publicKey, l.view.basketMint)),
+            ) / 1e6;
           const unit = l.supply > 0 ? l.navUsd / l.supply : 1;
           total += shares * unit;
           if (l.view.pubkey.toBase58() === selPk) selBal = shares;
@@ -125,7 +152,11 @@ export function Dashboard() {
   const deposit = async () => {
     if (!wallet || !sel) return;
     setBusy("deposit");
-    pushToast("info", "Posting Pyth prices & depositing…", "approve in your wallet");
+    pushToast(
+      "info",
+      "Posting Pyth prices & depositing…",
+      "approve in your wallet",
+    );
     try {
       const program = getProgram(wallet, connection);
       const me = wallet.publicKey;
@@ -133,24 +164,48 @@ export function Dashboard() {
       const quote = b.assets[b.quoteIndex]!;
       const depositorBasket = ownerAta(me, b.basketMint);
       const depositorQuote = ownerAta(me, quote.mint);
+      // Creator's basket ATA receives the deposit fee; ensure it exists (idempotent,
+      // and == depositorBasket when the depositor is the creator).
+      const creatorBasket = ownerAta(b.authority, b.basketMint);
       const amount = new BN(Math.round(Number(depAmt) * 10 ** quote.decimals));
       const feeds = b.assets.map((a) => a.feedHex);
-      const sigs = await sendWithPyth(connection, wallet, feeds, async (priceFor) => [
-        createAssociatedTokenAccountIdempotentInstruction(me, depositorBasket, me, b.basketMint),
-        await program.methods
-          .deposit(amount)
-          .accountsPartial({
-            basket: b.pubkey,
-            basketMint: b.basketMint,
-            depositor: me,
-            depositorQuote,
+      const sigs = await sendWithPyth(
+        connection,
+        wallet,
+        feeds,
+        async (priceFor) => [
+          createAssociatedTokenAccountIdempotentInstruction(
+            me,
             depositorBasket,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          })
-          .remainingAccounts(depositRemaining(b.pubkey, b.assets, priceFor))
-          .instruction(),
-      ]);
-      pushToast("ok", `Deposited ${depAmt} ${quoteSym}`, sigs[sigs.length - 1]?.slice(0, 24) + "…");
+            me,
+            b.basketMint,
+          ),
+          createAssociatedTokenAccountIdempotentInstruction(
+            me,
+            creatorBasket,
+            b.authority,
+            b.basketMint,
+          ),
+          await program.methods
+            .deposit(amount)
+            .accountsPartial({
+              basket: b.pubkey,
+              basketMint: b.basketMint,
+              depositor: me,
+              depositorQuote,
+              depositorBasket,
+              creatorBasket,
+              tokenProgram: TOKEN_PROGRAM_ID,
+            })
+            .remainingAccounts(depositRemaining(b.pubkey, b.assets, priceFor))
+            .instruction(),
+        ],
+      );
+      pushToast(
+        "ok",
+        `Deposited ${depAmt} ${quoteSym}`,
+        sigs[sigs.length - 1]?.slice(0, 24) + "…",
+      );
       await refresh();
     } catch (e) {
       pushToast("err", "Deposit failed", (e as Error).message);
@@ -168,7 +223,14 @@ export function Dashboard() {
       const me = wallet.publicKey;
       const b = sel.view;
       const amount = new BN(Math.round(Number(wdAmt) * 1e6));
-      const ataIxs = b.assets.map((a) => createAssociatedTokenAccountIdempotentInstruction(me, ownerAta(me, a.mint), me, a.mint));
+      const ataIxs = b.assets.map((a) =>
+        createAssociatedTokenAccountIdempotentInstruction(
+          me,
+          ownerAta(me, a.mint),
+          me,
+          a.mint,
+        ),
+      );
       const sig = await program.methods
         .withdraw(amount)
         .accountsPartial({
@@ -192,14 +254,17 @@ export function Dashboard() {
 
   return (
     <div className="app">
-      <DashboardHeader network={NETWORK} onToast={pushToast} onFunded={refresh} />
+      <DashboardHeader network={NETWORK} />
 
       <main className="container">
         <div className="page-head">
           <div>
             <span className="page-kicker">Prism console</span>
             <h1>Portfolio dashboard</h1>
-            <p>Compose, fund, and rebalance on-chain index baskets. Live NAV is priced from Pyth feeds.</p>
+            <p>
+              Compose, fund, and rebalance on-chain index baskets. Live NAV is
+              priced from Pyth feeds.
+            </p>
           </div>
           <div className="page-actions" aria-label="Dashboard status">
             <span>Live Pyth pricing</span>
@@ -207,7 +272,12 @@ export function Dashboard() {
           </div>
         </div>
 
-        <PortfolioOverview lives={lives} holdingsUsd={holdingsUsd} connected={!!wallet} loading={loading} />
+        <PortfolioOverview
+          lives={lives}
+          holdingsUsd={holdingsUsd}
+          connected={!!wallet}
+          loading={loading}
+        />
 
         <section className="section">
           <div className="section-head">
@@ -221,7 +291,12 @@ export function Dashboard() {
               </span>
             )}
           </div>
-          <BasketGrid lives={lives} selected={selected} loading={loading} onSelect={setSelected} />
+          <BasketGrid
+            lives={lives}
+            selected={selected}
+            loading={loading}
+            onSelect={setSelected}
+          />
         </section>
 
         {sel && (

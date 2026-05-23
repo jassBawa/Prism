@@ -64,11 +64,21 @@ export function BasketDetail({
             </span>
             <span className="m">
               <span className="k">Drift threshold</span>
-              <span className="v">{pct(b.thresholdBps)}</span>
+              <span className="v">
+                {pct(b.thresholdBps)} abs / {pct(b.thresholdRelBps)} rel
+              </span>
             </span>
             <span className="m">
               <span className="k">Rebalance every</span>
               <span className="v">{b.intervalSecs}s</span>
+            </span>
+            <span className="m">
+              <span className="k">Arb spread</span>
+              <span className="v">{pct(b.spreadBps)}</span>
+            </span>
+            <span className="m">
+              <span className="k">Creator fee</span>
+              <span className="v">{pct(b.feeBps)}</span>
             </span>
             <span className="m">
               <span className="k">Mint</span>

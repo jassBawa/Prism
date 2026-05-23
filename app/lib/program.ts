@@ -12,11 +12,20 @@ export function getConnection(): Connection {
 const u64le = (id: number): Buffer => new BN(id).toArrayLike(Buffer, "le", 8);
 
 export const basketPda = (creator: PublicKey, id: number): PublicKey =>
-  PublicKey.findProgramAddressSync([Buffer.from("basket"), creator.toBuffer(), u64le(id)], PROGRAM_ID)[0];
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("basket"), creator.toBuffer(), u64le(id)],
+    PROGRAM_ID,
+  )[0];
 export const basketMintPda = (basket: PublicKey): PublicKey =>
-  PublicKey.findProgramAddressSync([Buffer.from("mint"), basket.toBuffer()], PROGRAM_ID)[0];
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("mint"), basket.toBuffer()],
+    PROGRAM_ID,
+  )[0];
 export const supportedAssetPda = (mint: PublicKey): PublicKey =>
-  PublicKey.findProgramAddressSync([Buffer.from("asset"), mint.toBuffer()], PROGRAM_ID)[0];
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("asset"), mint.toBuffer()],
+    PROGRAM_ID,
+  )[0];
 export const registryPda = (): PublicKey =>
   PublicKey.findProgramAddressSync([Buffer.from("registry")], PROGRAM_ID)[0];
 export const vaultAta = (basket: PublicKey, mint: PublicKey): PublicKey =>
@@ -25,19 +34,33 @@ export const ownerAta = (owner: PublicKey, mint: PublicKey): PublicKey =>
   getAssociatedTokenAddressSync(mint, owner);
 
 /** Read-only program (dummy wallet) for fetching account data. */
-export function getReadProgram(connection: Connection = getConnection()): Program<MiniSymmetry> {
-  const dummy = new AnchorProvider(connection, { publicKey: Keypair.generate().publicKey } as unknown as Wallet, {
-    commitment: "confirmed",
-  });
+export function getReadProgram(
+  connection: Connection = getConnection(),
+): Program<MiniSymmetry> {
+  const dummy = new AnchorProvider(
+    connection,
+    { publicKey: Keypair.generate().publicKey } as unknown as Wallet,
+    {
+      commitment: "confirmed",
+    },
+  );
   return new Program<MiniSymmetry>(idl as MiniSymmetry, dummy);
 }
 
 /** A connected browser wallet (subset of anchor's Wallet — no `payer`). */
-export type WalletLike = Pick<Wallet, "publicKey" | "signTransaction" | "signAllTransactions">;
+export type WalletLike = Pick<
+  Wallet,
+  "publicKey" | "signTransaction" | "signAllTransactions"
+>;
 
 /** Program bound to a connected wallet for signing. */
-export function getProgram(wallet: WalletLike, connection: Connection = getConnection()): Program<MiniSymmetry> {
-  const provider = new AnchorProvider(connection, wallet as Wallet, { commitment: "confirmed" });
+export function getProgram(
+  wallet: WalletLike,
+  connection: Connection = getConnection(),
+): Program<MiniSymmetry> {
+  const provider = new AnchorProvider(connection, wallet as Wallet, {
+    commitment: "confirmed",
+  });
   return new Program<MiniSymmetry>(idl as MiniSymmetry, provider);
 }
 
@@ -58,6 +81,9 @@ export interface BasketView {
   quoteIndex: number;
   assets: OnchainAsset[];
   thresholdBps: number;
+  thresholdRelBps: number;
+  spreadBps: number;
+  feeBps: number;
   intervalSecs: number;
   lastRebalanceTs: number;
   paused: boolean;
@@ -77,6 +103,9 @@ interface RawBasket {
   quoteIndex: number;
   assets: RawAsset[];
   rebalanceThresholdBps: number;
+  rebalanceThresholdRelBps: number;
+  rebalanceSpreadBps: number;
+  depositFeeBps: number;
   rebalanceIntervalSecs: BN;
   lastRebalanceTs: BN;
   paused: boolean;
@@ -110,6 +139,9 @@ function decodeBasket(pubkey: PublicKey, a: RawBasket): BasketView {
     quoteIndex: a.quoteIndex,
     assets,
     thresholdBps: a.rebalanceThresholdBps,
+    thresholdRelBps: a.rebalanceThresholdRelBps,
+    spreadBps: a.rebalanceSpreadBps,
+    feeBps: a.depositFeeBps,
     intervalSecs: a.rebalanceIntervalSecs.toNumber(),
     lastRebalanceTs: a.lastRebalanceTs.toNumber(),
     paused: a.paused,
@@ -118,13 +150,26 @@ function decodeBasket(pubkey: PublicKey, a: RawBasket): BasketView {
 
 /** Read the registry (1 account) → fetch each basket via getMultipleAccounts.
  * Avoids getProgramAccounts, which forked/public RPCs throttle or don't serve. */
-export async function fetchAllBaskets(program: Program<MiniSymmetry>): Promise<BasketView[]> {
-  const reg = (await program.account.registry.fetchNullable(registryPda())) as unknown as RawRegistry | null;
+export async function fetchAllBaskets(
+  program: Program<MiniSymmetry>,
+): Promise<BasketView[]> {
+  const reg = (await program.account.registry.fetchNullable(
+    registryPda(),
+  )) as unknown as RawRegistry | null;
   if (!reg || reg.count === 0) return [];
   const pubkeys = reg.baskets.slice(0, reg.count);
-  const accounts = (await program.account.basket.fetchMultiple(pubkeys)) as unknown as (RawBasket | null)[];
-  return accounts
-    .map((a, i) => (a ? decodeBasket(pubkeys[i]!, a) : null))
-    .filter((b): b is BasketView => b !== null)
-    .sort((x, y) => x.id - y.id);
+  // Decode each account individually so one undecodable entry (e.g. a basket from a
+  // pre-upgrade layout) is skipped rather than failing the whole batch.
+  const infos = await program.provider.connection.getMultipleAccountsInfo(pubkeys);
+  const out: BasketView[] = [];
+  infos.forEach((info, i) => {
+    if (!info) return;
+    try {
+      const a = program.coder.accounts.decode<RawBasket>("basket", info.data);
+      out.push(decodeBasket(pubkeys[i]!, a));
+    } catch {
+      /* stale/old-layout basket — skip */
+    }
+  });
+  return out.sort((x, y) => x.id - y.id);
 }

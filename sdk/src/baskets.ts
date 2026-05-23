@@ -14,6 +14,9 @@ export interface OnchainBasket {
   id: number;
   quoteIndex: number;
   thresholdBps: number;
+  thresholdRelBps: number;
+  spreadBps: number;
+  feeBps: number;
   intervalSecs: number;
   lastRebalanceTs: number;
   paused: boolean;
@@ -35,6 +38,9 @@ interface RawBasket {
   quoteIndex: number;
   assets: RawAsset[];
   rebalanceThresholdBps: number;
+  rebalanceThresholdRelBps: number;
+  rebalanceSpreadBps: number;
+  depositFeeBps: number;
   rebalanceIntervalSecs: BN;
   lastRebalanceTs: BN;
   paused: boolean;
@@ -45,7 +51,13 @@ const toHex = (b: number[]): string => Buffer.from(b).toString("hex");
 function decode(pubkey: PublicKey, a: RawBasket): OnchainBasket {
   const assets: AssetEntry[] = a.assets.slice(0, a.numAssets).map((x) => {
     const feed = toHex(x.feedId);
-    return { key: supportedByFeed(feed)?.key ?? feed.slice(0, 6), mint: x.mint.toBase58(), feed, decimals: x.decimals, weightBps: x.targetWeightBps };
+    return {
+      key: supportedByFeed(feed)?.key ?? feed.slice(0, 6),
+      mint: x.mint.toBase58(),
+      feed,
+      decimals: x.decimals,
+      weightBps: x.targetWeightBps,
+    };
   });
   return {
     pubkey,
@@ -54,11 +66,16 @@ function decode(pubkey: PublicKey, a: RawBasket): OnchainBasket {
     id: a.id.toNumber(),
     quoteIndex: a.quoteIndex,
     thresholdBps: a.rebalanceThresholdBps,
+    thresholdRelBps: a.rebalanceThresholdRelBps,
+    spreadBps: a.rebalanceSpreadBps,
+    feeBps: a.depositFeeBps,
     intervalSecs: a.rebalanceIntervalSecs.toNumber(),
     lastRebalanceTs: a.lastRebalanceTs.toNumber(),
     paused: a.paused,
     assets,
-    vaults: assets.map((as) => vaultAta(pubkey, new PublicKey(as.mint)).toBase58()),
+    vaults: assets.map((as) =>
+      vaultAta(pubkey, new PublicKey(as.mint)).toBase58(),
+    ),
   };
 }
 
@@ -69,13 +86,26 @@ interface RawRegistry {
 
 /** Read the registry (1 account) → fetch each basket via getMultipleAccounts.
  *  Universally supported, unlike getProgramAccounts (which forked/public RPCs throttle). */
-export async function fetchAllBaskets(program: Program<MiniSymmetry>): Promise<OnchainBasket[]> {
-  const reg = (await program.account.registry.fetchNullable(registryPda())) as unknown as RawRegistry | null;
+export async function fetchAllBaskets(
+  program: Program<MiniSymmetry>,
+): Promise<OnchainBasket[]> {
+  const reg = (await program.account.registry.fetchNullable(
+    registryPda(),
+  )) as unknown as RawRegistry | null;
   if (!reg || reg.count === 0) return [];
   const pubkeys = reg.baskets.slice(0, reg.count);
-  const accounts = (await program.account.basket.fetchMultiple(pubkeys)) as unknown as (RawBasket | null)[];
-  return accounts
-    .map((a, i) => (a ? decode(pubkeys[i]!, a) : null))
-    .filter((b): b is OnchainBasket => b !== null)
-    .sort((x, y) => x.id - y.id);
+  // Decode each account individually so one undecodable entry (e.g. a basket from a
+  // pre-upgrade layout) is skipped rather than failing the whole batch.
+  const infos = await program.provider.connection.getMultipleAccountsInfo(pubkeys);
+  const out: OnchainBasket[] = [];
+  infos.forEach((info, i) => {
+    if (!info) return;
+    try {
+      const a = program.coder.accounts.decode<RawBasket>("basket", info.data);
+      out.push(decode(pubkeys[i]!, a));
+    } catch {
+      /* stale/old-layout basket — skip */
+    }
+  });
+  return out.sort((x, y) => x.id - y.id);
 }

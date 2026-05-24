@@ -21,14 +21,14 @@ const PUBLIC_DEVNET = {
 
 const cfg = configExists() ? loadBasketsConfig() : PUBLIC_DEVNET;
 const rpc = process.env.RPC_URL?.trim() || "https://api.devnet.solana.com";
-const faucet = process.env.FAUCET_URL?.trim() || "";
 const env =
   [
     `NEXT_PUBLIC_RPC_URL=${rpc}`,
     `NEXT_PUBLIC_PROGRAM_ID=${cfg.programId}`,
     `NEXT_PUBLIC_MINTS=${JSON.stringify(cfg.mints)}`,
-    `NEXT_PUBLIC_FAUCET_URL=${faucet}`,
   ].join("\n") + "\n";
 
 writeFileSync(resolve(process.cwd(), "app/.env.local"), env);
-console.log(`wrote app/.env.local → RPC ${rpc}${configExists() ? " (from .keys/basket.json)" : " (public devnet defaults)"}`);
+console.log(
+  `wrote app/.env.local → RPC ${rpc}${configExists() ? " (from .keys/basket.json)" : " (public devnet defaults)"}`,
+);

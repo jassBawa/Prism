@@ -13,6 +13,8 @@ use crate::state::{AssetConfig, Basket, Registry, SupportedAsset};
 pub fn create_basket_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateBasket<'info>>,
     id: u64,
+    name: String,
+    description: String,
     num_assets: u8,
     quote_index: u8,
     weights_bps: Vec<u16>,
@@ -23,6 +25,7 @@ pub fn create_basket_handler<'info>(
     rebalance_interval_secs: i64,
 ) -> Result<()> {
     let n = num_assets as usize;
+    require!(!name.is_empty() && name.len() <= 32 && description.len() <= 200, MsError::BadMetadata);
     require!((MIN_ASSETS..=PRICED_MAX_ASSETS).contains(&n), MsError::BadAssetCount);
     require!(weights_bps.len() == n, MsError::BadWeights);
     require!((quote_index as usize) < n, MsError::BadQuoteIndex);
@@ -112,6 +115,9 @@ pub fn create_basket_handler<'info>(
     b.authority = ctx.accounts.creator.key();
     b.basket_mint = ctx.accounts.basket_mint.key();
     b.id = id;
+    b.name = name;
+    b.description = description;
+    b.created_ts = Clock::get()?.unix_timestamp;
     b.num_assets = num_assets;
     b.quote_index = quote_index;
     b.assets = assets;

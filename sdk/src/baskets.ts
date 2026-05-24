@@ -12,6 +12,9 @@ export interface OnchainBasket {
   authority: PublicKey;
   basketMint: PublicKey;
   id: number;
+  name: string;
+  description: string;
+  createdTs: number;
   quoteIndex: number;
   thresholdBps: number;
   thresholdRelBps: number;
@@ -34,6 +37,9 @@ interface RawBasket {
   authority: PublicKey;
   basketMint: PublicKey;
   id: BN;
+  name: string;
+  description: string;
+  createdTs: BN;
   numAssets: number;
   quoteIndex: number;
   assets: RawAsset[];
@@ -64,6 +70,9 @@ function decode(pubkey: PublicKey, a: RawBasket): OnchainBasket {
     authority: a.authority,
     basketMint: a.basketMint,
     id: a.id.toNumber(),
+    name: a.name,
+    description: a.description,
+    createdTs: a.createdTs.toNumber(),
     quoteIndex: a.quoteIndex,
     thresholdBps: a.rebalanceThresholdBps,
     thresholdRelBps: a.rebalanceThresholdRelBps,

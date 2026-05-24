@@ -33,16 +33,18 @@ import {
   type BasketsConfig,
 } from "../sdk/src/config.js";
 
-// Demo baskets: keys (from the supported set) + weights (bps) + the quote key.
+// Demo funds: name + description (on-chain) + assets + weights + quote key.
 const BASKET_SPECS = [
   {
-    label: "Blue-chip 50/30/20",
+    label: "Blue-chip Index",
+    description: "Diversified SOL, JUP and USDC exposure, rebalanced to a 50/30/20 target.",
     keys: ["sol", "jup", "usdc"],
     weights: [5000, 3000, 2000],
     quote: "usdc",
   },
   {
-    label: "SOL-USDC 60/40",
+    label: "SOL Core 60/40",
+    description: "A simple SOL-heavy fund with a USDC stable cushion, kept at 60/40.",
     keys: ["sol", "usdc"],
     weights: [6000, 4000],
     quote: "usdc",
@@ -142,6 +144,8 @@ async function main() {
     await program.methods
       .createBasket(
         new BN(id),
+        spec.label,
+        spec.description,
         spec.keys.length,
         quoteIndex,
         spec.weights,

@@ -384,6 +384,8 @@ async function createBasket(
   const ix = await e.program.methods
     .createBasket(
       new BN(id),
+      "Test Fund",
+      "litesvm test fund",
       keys.length,
       quoteIndex,
       weights,

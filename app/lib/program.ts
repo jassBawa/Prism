@@ -77,6 +77,9 @@ export interface BasketView {
   authority: PublicKey;
   basketMint: PublicKey;
   id: number;
+  name: string;
+  description: string;
+  createdTs: number;
   numAssets: number;
   quoteIndex: number;
   assets: OnchainAsset[];
@@ -99,6 +102,9 @@ interface RawBasket {
   authority: PublicKey;
   basketMint: PublicKey;
   id: BN;
+  name: string;
+  description: string;
+  createdTs: BN;
   numAssets: number;
   quoteIndex: number;
   assets: RawAsset[];
@@ -135,6 +141,9 @@ function decodeBasket(pubkey: PublicKey, a: RawBasket): BasketView {
     authority: a.authority,
     basketMint: a.basketMint,
     id: a.id.toNumber(),
+    name: a.name,
+    description: a.description,
+    createdTs: a.createdTs.toNumber(),
     numAssets: n,
     quoteIndex: a.quoteIndex,
     assets,

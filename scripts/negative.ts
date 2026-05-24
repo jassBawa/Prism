@@ -74,6 +74,8 @@ async function main() {
     return program.methods
       .createBasket(
         new BN(id),
+        "Test fund",
+        "negative-test fund",
         mints.length,
         quoteIndex,
         weights,

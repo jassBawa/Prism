@@ -10,6 +10,8 @@ pub enum MsError {
     BadQuoteIndex,
     #[msg("threshold/interval below minimum")]
     BadParams,
+    #[msg("name must be 1..=32 chars and description <= 200")]
+    BadMetadata,
     #[msg("wrong number of remaining accounts")]
     BadRemainingAccounts,
     #[msg("duplicate asset in basket")]

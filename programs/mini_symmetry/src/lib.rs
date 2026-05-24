@@ -64,6 +64,8 @@ pub mod mini_symmetry {
     pub fn create_basket<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateBasket<'info>>,
         id: u64,
+        name: String,
+        description: String,
         num_assets: u8,
         quote_index: u8,
         weights_bps: Vec<u16>,
@@ -76,6 +78,8 @@ pub mod mini_symmetry {
         instructions::create_basket::create_basket_handler(
             ctx,
             id,
+            name,
+            description,
             num_assets,
             quote_index,
             weights_bps,

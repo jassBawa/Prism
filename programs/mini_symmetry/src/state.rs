@@ -8,6 +8,11 @@ pub struct Basket {
     pub authority: Pubkey,
     pub basket_mint: Pubkey,
     pub id: u64,
+    #[max_len(32)]
+    pub name: String,
+    #[max_len(200)]
+    pub description: String,
+    pub created_ts: i64,
     pub num_assets: u8,
     pub quote_index: u8,
     pub assets: [AssetConfig; MAX_ASSETS],

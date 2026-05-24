@@ -127,6 +127,14 @@ export type MiniSymmetry = {
           "type": "u64"
         },
         {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
           "name": "numAssets",
           "type": "u8"
         },
@@ -640,121 +648,126 @@ export type MiniSymmetry = {
     },
     {
       "code": 6004,
+      "name": "badMetadata",
+      "msg": "name must be 1..=32 chars and description <= 200"
+    },
+    {
+      "code": 6005,
       "name": "badRemainingAccounts",
       "msg": "wrong number of remaining accounts"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "duplicateAsset",
       "msg": "duplicate asset in basket"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "badMint",
       "msg": "invalid SPL mint"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "assetNotSupported",
       "msg": "asset not in the supported allowlist"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "quoteNotEligible",
       "msg": "quote asset is not quote-eligible"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "paused",
       "msg": "basket is paused"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "zeroAmount",
       "msg": "amount must be > 0"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "badAmount",
       "msg": "invalid amount"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "zeroMint",
       "msg": "would mint zero basket tokens"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "dustWithdraw",
       "msg": "withdraw rounds to zero — increase amount"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "mathOverflow",
       "msg": "math overflow"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "stalePrice",
       "msg": "pyth price is stale"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "badPrice",
       "msg": "pyth price invalid"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "lowConfidence",
       "msg": "pyth price confidence too low"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "emptyVault",
       "msg": "vault is empty"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "intervalNotElapsed",
       "msg": "rebalance interval not elapsed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "driftBelowThreshold",
       "msg": "drift below threshold"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "unauthorized",
       "msg": "unauthorized"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "badPriceOwner",
       "msg": "price account not owned by pyth receiver"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "feedMismatch",
       "msg": "price feed id mismatch"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "badVault",
       "msg": "invalid vault account"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "badUserAccount",
       "msg": "invalid user/reserve token account"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "duplicatePrice",
       "msg": "duplicate price account"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "registryFull",
       "msg": "basket registry is full"
     }
@@ -805,6 +818,18 @@ export type MiniSymmetry = {
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "createdTs",
+            "type": "i64"
           },
           {
             "name": "numAssets",

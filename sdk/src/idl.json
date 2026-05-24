@@ -13,7 +13,16 @@
         "Create a basket from `num_assets` supported assets + target weights.",
         "`remaining_accounts`: for each asset i, the triple [mint_i, supported_i, vault_i]."
       ],
-      "discriminator": [47, 105, 155, 148, 15, 169, 202, 211],
+      "discriminator": [
+        47,
+        105,
+        155,
+        148,
+        15,
+        169,
+        202,
+        211
+      ],
       "accounts": [
         {
           "name": "creator",
@@ -27,7 +36,14 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [98, 97, 115, 107, 101, 116]
+                "value": [
+                  98,
+                  97,
+                  115,
+                  107,
+                  101,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -47,7 +63,12 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [109, 105, 110, 116]
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -63,7 +84,16 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 103, 105, 115, 116, 114, 121]
+                "value": [
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
               }
             ]
           }
@@ -89,6 +119,14 @@
         {
           "name": "id",
           "type": "u64"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
         },
         {
           "name": "num_assets",
@@ -132,7 +170,16 @@
         "Deposit the quote asset; receive basket tokens priced by NAV (before this deposit).",
         "`remaining_accounts`: [vault_0..vault_{n-1}, price_0..price_{n-1}]."
       ],
-      "discriminator": [242, 35, 198, 137, 82, 225, 242, 182],
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
       "accounts": [
         {
           "name": "basket"
@@ -181,7 +228,16 @@
         "baskets with getAccountInfo + getMultipleAccounts — no getProgramAccounts,",
         "which public/forked RPCs throttle or don't serve."
       ],
-      "discriminator": [131, 22, 4, 103, 24, 94, 163, 239],
+      "discriminator": [
+        131,
+        22,
+        4,
+        103,
+        24,
+        94,
+        163,
+        239
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -196,7 +252,16 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [114, 101, 103, 105, 115, 116, 114, 121]
+                "value": [
+                  114,
+                  101,
+                  103,
+                  105,
+                  115,
+                  116,
+                  114,
+                  121
+                ]
               }
             ]
           }
@@ -216,7 +281,16 @@
         "reserve can't cover the delta is skipped, never reverting the whole tx.",
         "`remaining_accounts`: [vault_0.., price_0.., reserve_0..] (three n-blocks)."
       ],
-      "discriminator": [108, 158, 77, 9, 210, 52, 88, 62],
+      "discriminator": [
+        108,
+        158,
+        77,
+        9,
+        210,
+        52,
+        88,
+        62
+      ],
       "accounts": [
         {
           "name": "basket",
@@ -240,7 +314,16 @@
         "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
         "and deposit fee."
       ],
-      "discriminator": [27, 234, 178, 52, 147, 2, 187, 141],
+      "discriminator": [
+        27,
+        234,
+        178,
+        52,
+        147,
+        2,
+        187,
+        141
+      ],
       "accounts": [
         {
           "name": "basket",
@@ -249,7 +332,9 @@
         {
           "name": "authority",
           "signer": true,
-          "relations": ["basket"]
+          "relations": [
+            "basket"
+          ]
         }
       ],
       "args": [
@@ -277,8 +362,19 @@
     },
     {
       "name": "set_paused",
-      "docs": ["Owner: pause / unpause a basket (halts deposit + rebalance)."],
-      "discriminator": [91, 60, 125, 192, 176, 225, 166, 218],
+      "docs": [
+        "Owner: pause / unpause a basket (halts deposit + rebalance)."
+      ],
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
       "accounts": [
         {
           "name": "basket",
@@ -287,7 +383,9 @@
         {
           "name": "authority",
           "signer": true,
-          "relations": ["basket"]
+          "relations": [
+            "basket"
+          ]
         }
       ],
       "args": [
@@ -303,7 +401,16 @@
         "Admin: add or update a supported asset. Binds the mint to its Pyth feed",
         "and reads `decimals` from the real Mint (never trusts a caller arg)."
       ],
-      "discriminator": [79, 67, 133, 132, 129, 164, 92, 201],
+      "discriminator": [
+        79,
+        67,
+        133,
+        132,
+        129,
+        164,
+        92,
+        201
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -321,7 +428,13 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [97, 115, 115, 101, 116]
+                "value": [
+                  97,
+                  115,
+                  115,
+                  101,
+                  116
+                ]
               },
               {
                 "kind": "account",
@@ -339,7 +452,10 @@
         {
           "name": "feed_id",
           "type": {
-            "array": ["u8", 32]
+            "array": [
+              "u8",
+              32
+            ]
           }
         },
         {
@@ -355,7 +471,16 @@
         "Oracle-free, swap-free, atomic — the un-gameable exit.",
         "`remaining_accounts`: [vault_0..vault_{n-1}, user_ata_0..user_ata_{n-1}]."
       ],
-      "discriminator": [183, 18, 70, 156, 148, 109, 161, 34],
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
       "accounts": [
         {
           "name": "basket"
@@ -389,37 +514,109 @@
   "accounts": [
     {
       "name": "Basket",
-      "discriminator": [219, 79, 107, 135, 231, 243, 218, 248]
+      "discriminator": [
+        219,
+        79,
+        107,
+        135,
+        231,
+        243,
+        218,
+        248
+      ]
     },
     {
       "name": "Registry",
-      "discriminator": [47, 174, 110, 246, 184, 182, 252, 218]
+      "discriminator": [
+        47,
+        174,
+        110,
+        246,
+        184,
+        182,
+        252,
+        218
+      ]
     },
     {
       "name": "SupportedAsset",
-      "discriminator": [129, 27, 96, 192, 89, 180, 227, 200]
+      "discriminator": [
+        129,
+        27,
+        96,
+        192,
+        89,
+        180,
+        227,
+        200
+      ]
     }
   ],
   "events": [
     {
       "name": "BasketCreated",
-      "discriminator": [26, 146, 108, 155, 189, 85, 8, 7]
+      "discriminator": [
+        26,
+        146,
+        108,
+        155,
+        189,
+        85,
+        8,
+        7
+      ]
     },
     {
       "name": "Deposited",
-      "discriminator": [111, 141, 26, 45, 161, 35, 100, 57]
+      "discriminator": [
+        111,
+        141,
+        26,
+        45,
+        161,
+        35,
+        100,
+        57
+      ]
     },
     {
       "name": "Rebalanced",
-      "discriminator": [74, 101, 57, 244, 181, 179, 52, 182]
+      "discriminator": [
+        74,
+        101,
+        57,
+        244,
+        181,
+        179,
+        52,
+        182
+      ]
     },
     {
       "name": "SupportedAssetSet",
-      "discriminator": [53, 98, 118, 75, 253, 110, 99, 229]
+      "discriminator": [
+        53,
+        98,
+        118,
+        75,
+        253,
+        110,
+        99,
+        229
+      ]
     },
     {
       "name": "Withdrawn",
-      "discriminator": [20, 89, 223, 198, 194, 124, 219, 13]
+      "discriminator": [
+        20,
+        89,
+        223,
+        198,
+        194,
+        124,
+        219,
+        13
+      ]
     }
   ],
   "errors": [
@@ -445,121 +642,126 @@
     },
     {
       "code": 6004,
+      "name": "BadMetadata",
+      "msg": "name must be 1..=32 chars and description <= 200"
+    },
+    {
+      "code": 6005,
       "name": "BadRemainingAccounts",
       "msg": "wrong number of remaining accounts"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "DuplicateAsset",
       "msg": "duplicate asset in basket"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "BadMint",
       "msg": "invalid SPL mint"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "AssetNotSupported",
       "msg": "asset not in the supported allowlist"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "QuoteNotEligible",
       "msg": "quote asset is not quote-eligible"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "Paused",
       "msg": "basket is paused"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "ZeroAmount",
       "msg": "amount must be > 0"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "BadAmount",
       "msg": "invalid amount"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "ZeroMint",
       "msg": "would mint zero basket tokens"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "DustWithdraw",
       "msg": "withdraw rounds to zero — increase amount"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "MathOverflow",
       "msg": "math overflow"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "StalePrice",
       "msg": "pyth price is stale"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "BadPrice",
       "msg": "pyth price invalid"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "LowConfidence",
       "msg": "pyth price confidence too low"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "EmptyVault",
       "msg": "vault is empty"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "IntervalNotElapsed",
       "msg": "rebalance interval not elapsed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "DriftBelowThreshold",
       "msg": "drift below threshold"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "Unauthorized",
       "msg": "unauthorized"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "BadPriceOwner",
       "msg": "price account not owned by pyth receiver"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "FeedMismatch",
       "msg": "price feed id mismatch"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "BadVault",
       "msg": "invalid vault account"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "BadUserAccount",
       "msg": "invalid user/reserve token account"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "DuplicatePrice",
       "msg": "duplicate price account"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "RegistryFull",
       "msg": "basket registry is full"
     }
@@ -581,7 +783,10 @@
           {
             "name": "feed_id",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -607,6 +812,18 @@
           {
             "name": "id",
             "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "created_ts",
+            "type": "i64"
           },
           {
             "name": "num_assets",
@@ -769,13 +986,19 @@
           {
             "name": "_pad",
             "type": {
-              "array": ["u8", 3]
+              "array": [
+                "u8",
+                3
+              ]
             }
           },
           {
             "name": "baskets",
             "type": {
-              "array": ["pubkey", 256]
+              "array": [
+                "pubkey",
+                256
+              ]
             }
           }
         ]
@@ -793,7 +1016,10 @@
           {
             "name": "feed_id",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {

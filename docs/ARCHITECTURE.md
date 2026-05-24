@@ -52,7 +52,10 @@ Program: mini_symmetry
   │   ├─ pyth_price_feed  : Pubkey        Pyth price update account
   │   ├─ vault_ata        : Pubkey        token account holding this asset (owner = Basket PDA)
   │   └─ decimals         : u8
-  ├─ rebalance_threshold_bps : u16        drift that triggers a rebalance (e.g. 100 = 1%)
+  ├─ rebalance_threshold_bps     : u16    absolute drift gate, bps of NAV (e.g. 100 = 1%)
+  ├─ rebalance_threshold_rel_bps : u16    relative drift gate, vs. each asset's own target
+  ├─ rebalance_spread_bps        : u16    better-than-oracle edge paid to the caller (≤ 1%)
+  ├─ deposit_fee_bps             : u16    creator's cut of minted basket tokens (≤ 5%)
   ├─ rebalance_interval_secs : i64        min seconds between rebalances
   ├─ last_rebalance_ts       : i64
   ├─ paused                  : bool
@@ -85,26 +88,33 @@ User                Frontend            Program (deposit)            Pyth
  │                    │                        │ mint basket tokens → user
  │◀─── basket tokens ─────────────────────────│                       │
 ```
-No swap. USDC sits idle in the vault until the next rebalance deploys it.
+A `deposit_fee_bps` slice of the minted tokens is routed to the creator (floored in the
+depositor's favor). No swap. USDC sits idle in the vault until the next rebalance deploys it.
 
-### 3.2 Rebalance (keeper-driven)
+### 3.2 Rebalance (permissionless, spread-incentivized)
 
 ```
-Keeper (cron, 30s)                  Program (rebalance)             Pyth
+Any caller / arb / keeper            Program (rebalance)             Pyth
  │ fetch Basket state                    │                           │
  │ pull Pyth prices ─────────────────────────────────────────────── ▶│
- │ drift = max|cur_bps - tgt_bps|        │                           │
- │ if drift >= threshold && interval ok: │                           │
+ │ dual gate: ∃ asset with               │                           │
+ │   abs_i >= thr_abs AND rel_i >= thr_rel                            │
+ │ if gate met && interval ok:           │                           │
  │   build tx (pyth updates + rebalance) │                           │
  │──────────────────────────────────────▶ verify fresh + confident  │
  │                                       │ value_i, nav, target_i     │
  │                                       │ delta_i = target_i - value_i
- │                                       │ mock_swap over→under @ oracle px
+ │                                       │ swap over→under @ oracle ± spread
+ │   ◀── caller nets ~spread × traded ───│ (paid out of vault NAV)    │
  │                                       │ last_rebalance_ts = now     │
  │◀──────── confirmed ───────────────────│                           │
 ```
-`mock` mode swaps internally at oracle price. `jupiter` mode: keeper builds Jupiter swap
-ixs off-chain (mainnet), program records/settles. Same `executeSwap(from,to,amtIn)` interface.
+The `keeper`/caller is a plain `Signer` (not checked against any authority) and supplies
+its own reserve token accounts — so **anyone** can call. The vault sells over-weight
+legs slightly below oracle and buys under-weight legs slightly above, handing the caller
+a `spread` edge; an external arbitrageur thus rebalances the fund for free. `mock` mode
+swaps vs. the caller's own reserve at oracle±spread (devnet); `jupiter` mode routes the
+legs through Jupiter (mainnet). Same `executeSwap(from,to,amtIn)` interface.
 
 ### 3.3 Withdraw
 
@@ -157,13 +167,16 @@ deposit/withdraw — so the program needs no heavy Jupiter CPI and deposits stay
 | Actor | Can | Cannot |
 |-------|-----|--------|
 | User | deposit, withdraw own share anytime (in-kind) | touch others' funds |
-| Keeper | trigger rebalance within program rules | mint, withdraw, or steal — only swaps within vault toward target |
-| Admin | set params, pause | bypass NAV/withdraw math |
+| Caller / arb | trigger rebalance within program rules, earn the `spread` | mint, withdraw, or steal — only swaps within the vault toward target, at oracle±spread |
+| Admin | set params (thresholds/interval/spread/fee), pause | bypass NAV/withdraw math |
 | Program | move vault assets, mint/burn per code | act without an instruction (passive) |
 
-Worst-case keeper compromise: attacker can force rebalances (bounded by threshold/interval),
-but **cannot drain** — no instruction lets the keeper move funds out of the vault. Users always
-exit via oracle-free in-kind `withdraw`.
+Permissionless rebalance is safe because each call only moves the vault **toward** target
+at oracle±spread, gated by the dual threshold + interval. The worst a caller can do is
+nibble the bounded `spread` (≤ 1%, and only when the fund is genuinely off-target) — they
+**cannot drain**: no instruction lets a caller move funds out of the vault, and the
+spread is the intended, capped cost of rebalancing. Users always exit via the oracle-free
+in-kind `withdraw`.
 
 ---
 
@@ -190,6 +203,6 @@ Testing: LiteSVM / Anchor mocha with mock Pyth accounts for the program; manual 
 | Pyth low confidence | reverted by guard |
 | Drift < threshold | `rebalance` no-ops/errors; keeper skips |
 | Interval not elapsed | reverted; keeper skips |
-| Keeper down | basket drifts but stays solvent; resumes when keeper back; users can still withdraw |
+| Keeper down | rebalance is permissionless — any arb can fire it for the spread; basket stays solvent and users can still withdraw regardless |
 | Compute-unit overflow | request extra CU; cap assets at 5 |
 | Rounding | always floor in user's disfavor → supply can't over-claim vault |

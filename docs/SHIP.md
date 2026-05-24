@@ -28,10 +28,10 @@ Program id `8TrJeQaHV4yXgPkNeZXR1pdWbEMXvnpLMYZpk1qX3jbe` (devnet). Instructions
 | Ix | What |
 |----|------|
 | `initialize_basket(weights, feed_ids, threshold_bps, interval_secs)` | admin: create Basket PDA + basket mint + 3 vault ATAs |
-| `deposit(usdc_amount)` | USDC in → mint basket token by NAV (uses `nav_before`) |
-| `withdraw(basket_amount)` | burn → in-kind pro-rata of every asset (oracle-free, atomic) |
-| `rebalance()` | keeper: drift ≥ threshold + interval → mock-swap vs keeper reserve at Pyth price |
-| `set_params` / `set_paused` | admin controls |
+| `deposit(usdc_amount)` | USDC in → mint basket token by NAV (uses `nav_before`); `deposit_fee_bps` slice → creator |
+| `withdraw(basket_amount)` | burn → in-kind pro-rata of every asset (oracle-free, atomic, fee-free) |
+| `rebalance()` | **anyone**: dual gate (abs+rel drift) + interval → mock-swap vs the caller's reserve at Pyth price ± `spread`; caller keeps the spread |
+| `set_params` / `set_paused` | admin controls (thresholds, interval, spread, fee, pause) |
 
 Guards: Pyth staleness (≤120s) + confidence (≤2%), weight sum = 10000, pause. Math in micro-USD, floors in the vault's favor. Pyth `PriceUpdateV2` parsed manually (avoids the pyth-crate ↔ anchor-1.0 borsh conflict); price account owner must be the Pyth receiver `rec5EKMGg6…`.
 
@@ -57,15 +57,19 @@ To run the loop on devnet self-contained:
 ## Acceptance (MVP done)
 
 - [x] Program builds + deploys to devnet
-- [ ] `initialize_basket` succeeds on devnet
-- [ ] Deposit USDC → receive basket tokens priced by NAV
-- [ ] Keeper auto-rebalances when drift > threshold; visible on dashboard
-- [ ] Withdraw → pro-rata assets back; supply burns
-- [ ] Pyth staleness/confidence guard rejects a forced-stale feed
-- [ ] One-command seed + recorded demo
+- [x] `create_basket` succeeds on devnet (user-created, 2–4 assets, multi-basket)
+- [x] Deposit USDC → receive basket tokens priced by NAV; `deposit_fee_bps` slice → creator
+- [x] Auto-rebalances when the dual gate (abs+rel) + interval are met; visible on dashboard
+- [x] **Permissionless rebalance**: a non-keeper arb fires it and nets ~`spread × traded`
+- [x] Withdraw → pro-rata assets back; supply burns (fee-free)
+- [x] Guards reject: bad params (fee/spread over cap), substituted accounts, drift below gate
+- [x] One-command seed (`pnpm seed`) + scripted demo (`pnpm skew` → `pnpm rebalance`)
 
 ## Known limitations (flag in the demo)
 
-- Centralized keeper (single keypair) — permissionless is Phase 4.
-- `mock_swap` fills at oracle price vs the keeper's own reserve (no real DEX; Jupiter has no devnet liquidity). Same `executeSwap` interface swaps to Jupiter on mainnet.
-- One hardcoded basket; user-created baskets are Phase 2.
+- **Rebalance is permissionless** (any wallet/arb, paid by the spread) — but there's no
+  bounty market yet, and we still run a reference keeper for liveness.
+- `mock_swap` fills at oracle price ± spread vs the **caller's own reserve** (no real DEX;
+  Jupiter has no devnet liquidity). Same `executeSwap` interface swaps to Jupiter on mainnet.
+- Pyth-only oracle (no multi-source aggregation / volatility guard yet).
+- Devnet, unaudited.

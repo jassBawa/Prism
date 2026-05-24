@@ -26,18 +26,28 @@ One hardcoded basket: **SOL 50% / JUP 30% / USDC 20%**. Devnet. Full deposit→r
 - **Staleness + confidence guards** — bad/old prices are rejected.
 - *User value:* honest, real-time fund valuation.
 
-### F4 — Auto-rebalance
+### F4 — Auto-rebalance (dual-threshold, spread-incentivized)
 - Basket drifts off target as prices move; system swaps it back to target weights.
-- Triggered by **drift threshold** (e.g. 1%) + **min interval** (anti-churn).
+- Triggered by a **dual drift gate**: some asset must breach **both** the absolute
+  threshold (share of NAV) **and** the relative threshold (vs. its own target), plus a
+  **min interval** (anti-churn). The abs gate ignores small wiggles in big slots; the
+  rel gate catches a small slot far off its own target.
+- The vault fills each leg at **oracle price ± `spread`**, paying the caller a small
+  edge — so rebalancing is **profitable for anyone**, not a cost the operator eats.
 - Idle USDC from deposits gets deployed into assets here (the "auto-split").
-- **Swap layer:** `mock_swap` at oracle price on devnet / Jupiter on mainnet (same interface).
-- *User value:* portfolio stays balanced hands-free.
+- **Swap layer:** `mock_swap` vs. the caller's own reserve at oracle±spread on devnet /
+  Jupiter on mainnet (same interface).
+- *User value:* portfolio stays balanced hands-free, and rebalancing pays for itself.
 
-### F5 — Keeper bot
-- Off-chain cron polls drift every ~30s, fires `rebalance` when conditions met.
-- Posts Pyth price updates (pull oracle) in the same transaction.
-- Single keeper for MVP (**centralized — flagged**, permissionless is later).
-- *User value:* the thing that makes "auto" actually happen.
+### F5 — Permissionless keeper / arb
+- `rebalance` is callable by **any wallet** — the signer is an actor role, not a
+  privilege. No trusted operator can be a single point of failure.
+- Whoever calls supplies their own asset reserves and pockets the `spread` — an
+  external arbitrageur rebalances the fund **for free** (the core Symmetry insight).
+- We still run a reference keeper (off-chain cron, posts Pyth updates, fires when the
+  dual gate + interval are met), but it's now **one of many possible callers**, not
+  load-bearing — if it's down, anyone (or any arb) keeps the fund balanced.
+- *User value:* "auto" happens even with no operator; no centralized keeper risk.
 
 ### F6 — Dashboard (frontend)
 - Connect wallet; **deposit** + **withdraw** boxes.
@@ -47,13 +57,21 @@ One hardcoded basket: **SOL 50% / JUP 30% / USDC 20%**. Devnet. Full deposit→r
 
 ### F7 — Admin / safety controls
 - Pause switch (halt deposit/rebalance).
-- Set rebalance threshold + interval.
+- `set_params`: abs + rel thresholds, interval, spread, deposit fee (bounded:
+  spread ≤ 1%, fee ≤ 5%).
 - Weight-sum validation on init (must = 100%).
 - *User value:* a kill-switch and sane configuration.
 
+### F8 — Creator deposit fee
+- A basket creator sets a `deposit_fee_bps` (≤ 5%); on each deposit a slice of the
+  newly minted basket tokens is routed to the creator's basket-token account.
+- Floors in the depositor's favor — a tiny deposit whose fee rounds to 0 pays nothing.
+- **Withdraw stays fee-free** — the oracle-free in-kind exit is left pure.
+- *User value:* a revenue stream that makes launching a basket worthwhile.
+
 ### MVP non-goals (explicitly excluded)
-❌ user-created baskets · ❌ multiple baskets · ❌ permissionless keepers · ❌ Dutch auctions ·
-❌ intents/limit orders · ❌ fund-as-LP fees · ❌ management fees · ❌ >5 assets · ❌ mainnet hardening
+❌ real-DEX (Jupiter) swaps · ❌ keeper bounty market · ❌ Dutch auctions ·
+❌ intents/limit orders · ❌ fund-as-LP fees · ❌ management/performance fees · ❌ >5 assets · ❌ mainnet hardening
 
 ---
 
@@ -80,9 +98,13 @@ One hardcoded basket: **SOL 50% / JUP 30% / USDC 20%**. Devnet. Full deposit→r
 
 ## Phase 4 — the real Symmetry magic
 
-- **Oracle-spread rebalance** — expose cheap oracle-priced swaps; **arbitrageurs rebalance the
-  fund for free** (no Jupiter dependency). The core Symmetry insight.
-- **Permissionless keeper network** — anyone runs a keeper, paid by **bounties**, racing to execute.
+- ✅ **Oracle-spread rebalance** — *shipped (F4)*: oracle±spread fills let arbitrageurs
+  rebalance the fund for free. (Devnet uses a mock swap vs. the caller's reserve;
+  real-DEX execution is below.)
+- ✅ **Permissionless rebalance** — *shipped (F5)*: any wallet may call. Still ahead: a
+  **bounty market** so callers are also paid task bounties, not just the spread.
+- **Real-DEX execution** — route the rebalance legs through **Jupiter v6** on mainnet
+  (replacing `mock_swap`), with slippage caps + a circuit breaker.
 - **Intents** — "if SOL > $300 sell 10%", scheduled rebalance, limit/bracket orders, DCA, volatility pauses.
 - **Fund-as-liquidity-provider** — basket market-makes on aggregators (Jupiter), earning
   **LP/swap fees for holders** — rebalance becomes profitable, not just free.

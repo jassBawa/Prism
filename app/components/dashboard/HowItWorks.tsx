@@ -8,17 +8,17 @@ const STEPS = [
   {
     n: "1",
     title: "Deposit one token",
-    body: "Send USDC and get one fund token, priced live from Pyth oracles — instant diversified exposure.",
+    body: "Send USDC, get one fund token priced live off Pyth. Diversified exposure in a single transaction.",
   },
   {
     n: "2",
-    title: "It stays balanced",
-    body: "As prices move, anyone can rebalance the vault to target weights for a small spread — no manual work.",
+    title: "It rebalances itself",
+    body: "As prices drift, anyone can trade the fund back to target for a small reward — so it stays on target with nobody at the wheel.",
   },
   {
     n: "3",
-    title: "Withdraw anytime",
-    body: "Redeem your token for your share of every asset in the fund. No swap, no slippage.",
+    title: "Exit on your terms",
+    body: "Redeem your token for your share of every asset inside. No swap, no slippage, no lockup.",
   },
 ];
 

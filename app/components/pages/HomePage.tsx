@@ -18,12 +18,12 @@ export function HomePage() {
       <div className="layout-main">
       <div className="page-head">
         <div>
-          <span className="page-kicker">Home</span>
-          <h1>{p.connected ? "Your holdings" : "One deposit, a whole portfolio"}</h1>
+          <span className="page-kicker">{p.connected ? "Portfolio" : "Prism"}</span>
+          <h1>{p.connected ? "Your funds, held on target" : "One deposit. A whole index, balanced for you."}</h1>
           <p>
             {p.connected
-              ? "The index funds you hold. Deposit one token, hold many — kept on target automatically."
-              : "Deposit one token and hold a diversified index fund that rebalances itself. Connect a wallet to begin, or explore the funds."}
+              ? "Every index fund you hold, priced live and kept at its target mix. Deposit once — the rebalancing runs without you."
+              : "Send a single token, hold a diversified on-chain fund that rebalances itself to target as the market moves. Connect a wallet to deposit, or look around first."}
           </p>
         </div>
       </div>
@@ -42,10 +42,10 @@ export function HomePage() {
           <BasketGrid lives={held} selected={p.selected} loading={false} onSelect={open} />
         ) : (
           <div className="empty">
-            <div className="emoji">💼</div>
-            <div className="et">No holdings yet</div>
+            <div className="et">Nothing held yet</div>
             <div className="es">
-              Explore index funds to deposit into, or create your own. Anything you hold shows up here.
+              Deposit into a fund — or spin up your own — and your positions land here, marked live with their
+              drift and 24h move.
             </div>
             <div className="empty-cta">
               <Link href="/explore" className="act act-inline">

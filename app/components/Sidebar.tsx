@@ -3,7 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { NETWORK } from "./PrismProvider";
-import { IconLayers, IconHome, IconCompass, IconExternal } from "@/components/ui/icons";
+import { SettingsMenu } from "./SettingsMenu";
+import { IconLayers, IconHome, IconCompass } from "@/components/ui/icons";
 
 const NAV = [
   { href: "/", label: "Home", icon: IconHome, exact: true },
@@ -26,6 +27,7 @@ export function Sidebar() {
         </div>
       </Link>
 
+      <div className="side-grouplabel">Menu</div>
       <nav className="side-nav">
         {NAV.map((n) => {
           const Icon = n.icon;
@@ -44,9 +46,9 @@ export function Sidebar() {
           {NETWORK}
         </span>
         <WalletMultiButton />
-        <a className="side-help" href="https://github.com/jassBawa/Prism" target="_blank" rel="noreferrer">
-          Help &amp; docs <IconExternal width={12} height={12} />
-        </a>
+        <div className="side-actions">
+          <SettingsMenu />
+        </div>
       </div>
     </aside>
   );

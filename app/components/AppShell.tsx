@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { usePrism } from "./PrismProvider";
 import { PriceTicker } from "./PriceTicker";
 import { Sidebar } from "./Sidebar";
+import { StatusBar } from "./StatusBar";
 import { Toasts } from "./dashboard/Toasts";
 
 /** Persistent app chrome: price ticker, left nav, content, toast queue.
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Sidebar />
         <main className="shell-main">{children}</main>
       </div>
+      <StatusBar />
       <Toasts items={p.toasts} onDismiss={p.dismissToast} />
     </div>
   );

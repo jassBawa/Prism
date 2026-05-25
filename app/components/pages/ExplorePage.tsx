@@ -19,8 +19,8 @@ export function ExplorePage() {
       <div className="page-head">
         <div>
           <span className="page-kicker">Explore</span>
-          <h1>Discover index funds</h1>
-          <p>Browse every on-chain index fund. Deposit one token to hold a diversified mix that stays on target automatically.</p>
+          <h1>Every fund, on one chain of glass</h1>
+          <p>Browse on-chain index funds, see what each one holds, and deposit a single token for instant diversified exposure. No bridges, no swaps to hold.</p>
         </div>
       </div>
 

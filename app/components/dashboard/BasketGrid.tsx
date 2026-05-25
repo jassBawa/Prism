@@ -31,10 +31,10 @@ export function BasketGrid({ lives, selected, loading, onSelect }: Props) {
     return (
       <div className="empty">
         <PrismArt size={120} />
-        <div className="et">No funds yet</div>
+        <div className="et">No funds on-chain yet</div>
         <div className="es">
-          An index fund holds many tokens in one — pick 2–4 assets and target weights, and it
-          stays balanced automatically. Create your first one below.
+          Be the first. Pick your assets, set the target weights, and ship a self-rebalancing index in a couple
+          of clicks.
         </div>
       </div>
     );

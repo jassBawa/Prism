@@ -19,6 +19,13 @@ interface Props {
 export function BasketRow({ live, active, index = 0, chg24h = 0, onSelect }: Props) {
   const b = live.view;
   const symbols = b.assets.map((a) => a.symbol);
+  // dominant weight, for the micro-caption under the bar
+  const top = b.assets
+    .map((a, i) => ({ sym: a.symbol, w: (live.weightsBps[i] ?? 0) / 100 }))
+    .sort((x, y) => y.w - x.w)[0];
+  const caption = top
+    ? `${top.sym} ${top.w.toFixed(0)}%${symbols.length > 1 ? ` · +${symbols.length - 1} more` : ""}`
+    : "";
 
   return (
     <button
@@ -40,14 +47,17 @@ export function BasketRow({ live, active, index = 0, chg24h = 0, onSelect }: Pro
         <span className={"frow-chg " + (chg24h >= 0 ? "up" : "down")}>{signedPct(chg24h)}</span>
       </div>
 
-      <div className="frow-bar" aria-hidden>
-        {b.assets.map((a, i) => (
-          <span
-            key={i}
-            style={{ width: `${(live.weightsBps[i] ?? 0) / 100}%`, background: assetColor(a.symbol, i) }}
-            title={`${a.symbol} ${((live.weightsBps[i] ?? 0) / 100).toFixed(1)}%`}
-          />
-        ))}
+      <div className="frow-barwrap">
+        <div className="frow-bar" aria-hidden>
+          {b.assets.map((a, i) => (
+            <span
+              key={i}
+              style={{ width: `${(live.weightsBps[i] ?? 0) / 100}%`, background: assetColor(a.symbol, i) }}
+              title={`${a.symbol} ${((live.weightsBps[i] ?? 0) / 100).toFixed(1)}%`}
+            />
+          ))}
+        </div>
+        <span className="frow-cap">{caption}</span>
       </div>
 
       <div className="frow-status">

@@ -64,7 +64,7 @@ export function RightRail() {
               const syms = t.live.view.assets.map((a) => a.symbol);
               return (
                 <button className="rrow rrow-btn" key={pk} onClick={() => router.push(`/fund/${pk}`)}>
-                  <span className="rrow-rank">{i + 1}</span>
+                  <span className={"rrow-rank" + (i === 0 ? " top" : "")}>{i + 1}</span>
                   <span className="rrow-fund">
                     <span className="rrow-fname">{t.live.view.name || syms.join(" / ")}</span>
                     <span className="rrow-fsub">{usd(t.live.navUsd, { compact: true })}</span>

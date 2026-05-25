@@ -3,6 +3,8 @@ import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { useMemo, type ReactNode } from "react";
 import { RPC_URL } from "@/lib/constants";
+import { PrismProvider } from "@/components/PrismProvider";
+import { AppShell } from "@/components/AppShell";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -12,7 +14,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ConnectionProvider endpoint={RPC_URL}>
       <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
+        <WalletModalProvider>
+          <PrismProvider>
+            <AppShell>{children}</AppShell>
+          </PrismProvider>
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

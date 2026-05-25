@@ -1,6 +1,9 @@
 "use client";
 import type { Live } from "@/lib/types";
-import { BasketCard } from "./BasketCard";
+import { useMarketPrices } from "@/lib/prices";
+import { chgMap, fundChange24h } from "@/lib/funds";
+import { PrismArt } from "@/components/ui/PrismArt";
+import { BasketRow } from "./BasketRow";
 
 interface Props {
   lives: Live[];
@@ -9,12 +12,16 @@ interface Props {
   onSelect: (pk: string) => void;
 }
 
+/** Compact, scannable list of fund rows. */
 export function BasketGrid({ lives, selected, loading, onSelect }: Props) {
+  const prices = useMarketPrices();
+  const chg = chgMap(prices);
+
   if (loading && lives.length === 0) {
     return (
-      <div className="bgrid">
+      <div className="flist">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="skel bcard-skel" />
+          <div key={i} className="skel frow-skel" />
         ))}
       </div>
     );
@@ -23,18 +30,30 @@ export function BasketGrid({ lives, selected, loading, onSelect }: Props) {
   if (lives.length === 0) {
     return (
       <div className="empty">
-        <div className="emoji">🧺</div>
-        <div className="et">No baskets yet</div>
-        <div className="es">Create your first index basket below — pick assets, set weights, and go.</div>
+        <PrismArt size={120} />
+        <div className="et">No funds yet</div>
+        <div className="es">
+          An index fund holds many tokens in one — pick 2–4 assets and target weights, and it
+          stays balanced automatically. Create your first one below.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bgrid">
-      {lives.map((l) => {
+    <div className="flist">
+      {lives.map((l, i) => {
         const pk = l.view.pubkey.toBase58();
-        return <BasketCard key={pk} live={l} active={selected === pk} onSelect={() => onSelect(pk)} />;
+        return (
+          <BasketRow
+            key={pk}
+            live={l}
+            index={i}
+            chg24h={fundChange24h(l, chg)}
+            active={selected === pk}
+            onSelect={() => onSelect(pk)}
+          />
+        );
       })}
     </div>
   );

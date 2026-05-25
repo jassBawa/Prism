@@ -20,3 +20,12 @@ export function depositRemaining(basket: PublicKey, assets: OnchainAsset[], pric
 export function withdrawRemaining(basket: PublicKey, user: PublicKey, assets: OnchainAsset[]): AccountMeta[] {
   return [...assets.map((a) => wr(vaultAta(basket, a.mint))), ...assets.map((a) => wr(ownerAta(user, a.mint)))];
 }
+
+/** rebalance: [vault_0..n-1, price_0..n-1, keeperReserve_0..n-1]. */
+export function rebalanceRemaining(basket: PublicKey, keeper: PublicKey, assets: OnchainAsset[], priceFor: PriceFor): AccountMeta[] {
+  return [
+    ...assets.map((a) => wr(vaultAta(basket, a.mint))),
+    ...assets.map((a) => ro(priceFor(a.feedHex))),
+    ...assets.map((a) => wr(ownerAta(keeper, a.mint))),
+  ];
+}

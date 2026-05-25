@@ -14,13 +14,13 @@ export function DriftBadge({ live }: { live: Live }) {
   if (drifting) {
     return (
       <span className="badge warn">
-        <IconScale width={12} height={12} /> Drifting {(live.maxDriftBps / 100).toFixed(1)}%
+        <IconScale width={12} height={12} /> Off target {(live.maxDriftBps / 100).toFixed(1)}%
       </span>
     );
   }
   return (
     <span className="badge ok">
-      <IconCheck width={12} height={12} /> Balanced
+      <IconCheck width={12} height={12} /> On target
     </span>
   );
 }

@@ -44,3 +44,23 @@ export function timeAgo(ms: number): string {
   if (m < 60) return `${m}m ago`;
   return `${Math.round(m / 60)}h ago`;
 }
+
+/** Solana explorer link for a transaction signature (devnet cluster). */
+export function explorerTx(sig: string): string {
+  return `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
+}
+
+/** Solana explorer link for an address (devnet cluster). */
+export function explorerAddr(addr: string): string {
+  return `https://explorer.solana.com/address/${addr}?cluster=devnet`;
+}
+
+/** A unix-seconds timestamp as a short date (e.g. "Jun 1, 2026"). */
+export function dateFmt(unixSecs: number): string {
+  if (!unixSecs) return "—";
+  return new Date(unixSecs * 1000).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}

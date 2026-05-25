@@ -85,17 +85,18 @@ export const feedId0x = (hex: string): string => "0x" + hex;
 export const COLORS: Record<string, string> = {
   SOL: "var(--sol)",
   JUP: "var(--jup)",
-  BONK: "#f5a623",
+  BONK: "var(--bonk)",
   USDC: "var(--usdc)",
 };
 
+// Darkened for contrast on the light theme.
 const FALLBACK_PALETTE = [
-  "#6e8bff",
-  "#a78bfa",
-  "#34d399",
-  "#f5a623",
-  "#f472b6",
-  "#22d3ee",
+  "#4f6bed",
+  "#7c3aed",
+  "#059669",
+  "#ea8a00",
+  "#db2777",
+  "#0891b2",
 ];
 
 /** Stable color for any asset symbol (known assets keep their brand color). */

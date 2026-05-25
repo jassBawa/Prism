@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Prism · Dashboard",
-  description: "A minimal on-chain index-fund / basket protocol on Solana",
+  title: "Prism · Index funds on Solana",
+  description: "Deposit one token, hold a self-rebalancing index fund on Solana.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

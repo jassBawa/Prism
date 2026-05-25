@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Prism">
+  <defs>
+    <linearGradient id="prism-bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="1" stop-color="#0B1220"/>
+    </linearGradient>
+    <clipPath id="prism-glyph">
+      <rect x="176" y="130" width="66" height="252" rx="22"/>
+      <path d="M204 130 H292 a90 90 0 0 1 0 180 H204 Z M242 172 H292 a48 48 0 0 1 0 96 H242 Z" clip-rule="evenodd"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#prism-bg)"/>
+
+  <g transform="translate(-22 0)">
+    <!-- P monogram -->
+    <rect x="176" y="130" width="66" height="252" rx="22" fill="#FFFFFF"/>
+    <path d="M204 130 H292 a90 90 0 0 1 0 180 H204 Z M242 172 H292 a48 48 0 0 1 0 96 H242 Z" fill="#FFFFFF" fill-rule="evenodd"/>
+    <!-- prism refraction: a single diagonal facet of light -->
+    <polygon points="138,120 154,120 426,392 410,392" fill="#38BDF8" opacity="0.9" clip-path="url(#prism-glyph)"/>
+  </g>
+</svg>

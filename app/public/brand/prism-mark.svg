@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="258" height="304" viewBox="150 104 258 304" fill="none" role="img" aria-label="Prism">
+  <defs>
+    <linearGradient id="prism-mark-grad" x1="176" y1="130" x2="382" y2="382" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#334155"/>
+      <stop offset="1" stop-color="#0B1220"/>
+    </linearGradient>
+    <clipPath id="prism-mark-clip">
+      <rect x="176" y="130" width="66" height="252" rx="22"/>
+      <path d="M204 130 H292 a90 90 0 0 1 0 180 H204 Z M242 172 H292 a48 48 0 0 1 0 96 H242 Z" clip-rule="evenodd"/>
+    </clipPath>
+  </defs>
+  <!-- P monogram, gradient on transparent -->
+  <rect x="176" y="130" width="66" height="252" rx="22" fill="url(#prism-mark-grad)"/>
+  <path d="M204 130 H292 a90 90 0 0 1 0 180 H204 Z M242 172 H292 a48 48 0 0 1 0 96 H242 Z" fill="url(#prism-mark-grad)" fill-rule="evenodd"/>
+  <!-- prism refraction facet -->
+  <polygon points="138,120 154,120 426,392 410,392" fill="#38BDF8" opacity="0.8" clip-path="url(#prism-mark-clip)"/>
+</svg>

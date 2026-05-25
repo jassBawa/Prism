@@ -1,13 +1,11 @@
-import { assetColor } from "@/lib/constants";
+import { TokenLogo } from "@/components/ui/TokenLogo";
 
-/** Overlapping circle stack of asset symbols, used in basket cards/headers. */
-export function AssetStack({ symbols }: { symbols: string[] }) {
+/** Overlapping stack of token logos, used in basket cards/headers. */
+export function AssetStack({ symbols, size = 22 }: { symbols: string[]; size?: number }) {
   return (
     <span className="sym-stack" aria-hidden>
       {symbols.map((s, i) => (
-        <span key={i} className="sym-dot" style={{ background: assetColor(s, i) }} title={s}>
-          {s.slice(0, 1)}
-        </span>
+        <TokenLogo key={i} symbol={s} index={i} size={size} />
       ))}
     </span>
   );

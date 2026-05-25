@@ -24,7 +24,15 @@ import {
 } from "@/lib/program";
 import { createBasketRemaining } from "@/lib/accounts";
 import type { ToastKind } from "@/lib/types";
+import { Info } from "@/components/ui/Info";
+import { TokenLogo } from "@/components/ui/TokenLogo";
 import { IconPlus, IconChevron, IconCheck } from "@/components/ui/icons";
+
+// One-tap starting points (mirror the seeded demo baskets).
+const PRESETS: { label: string; sel: string[]; weights: Record<string, string>; quote: string }[] = [
+  { label: "Blue-chip 50 / 30 / 20", sel: ["sol", "jup", "usdc"], weights: { sol: "50", jup: "30", usdc: "20" }, quote: "usdc" },
+  { label: "SOL · USDC 60 / 40", sel: ["sol", "usdc"], weights: { sol: "60", usdc: "40" }, quote: "usdc" },
+];
 
 interface Props {
   baskets: BasketView[];
@@ -43,6 +51,8 @@ export function CreateBasket({
   const wallet = useAnchorWallet();
   const available = useMemo(() => SUPPORTED_ASSETS.filter((a) => a.mint), []);
   const [open, setOpen] = useState(defaultOpen);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [sel, setSel] = useState<string[]>(["sol", "usdc"]);
   const [weights, setWeights] = useState<Record<string, string>>({
     sol: "60",
@@ -62,14 +72,43 @@ export function CreateBasket({
       if (cur.length >= PRICED_MAX_ASSETS) return cur;
       return [...cur, k];
     });
+    // Default a freshly added asset to an even split of what's left of 100.
     setWeights((w) => ({ ...w, [k]: w[k] ?? "0" }));
   };
 
+  const applyPreset = (p: (typeof PRESETS)[number]) => {
+    setSel(p.sel);
+    setWeights(p.weights);
+    setQuote(p.quote);
+  };
+
   const sum = sel.reduce((s, k) => s + (Number(weights[k]) || 0), 0);
+
+  // Scale the current weights so they sum to exactly 100 (even split if all zero).
+  const normalize = () => {
+    if (sel.length === 0) return;
+    const cur = sel.map((k) => Number(weights[k]) || 0);
+    const total = cur.reduce((s, v) => s + v, 0);
+    const next: Record<string, string> = { ...weights };
+    if (total === 0) {
+      const each = Math.floor(100 / sel.length);
+      sel.forEach((k, i) => (next[k] = String(i === 0 ? 100 - each * (sel.length - 1) : each)));
+    } else {
+      let acc = 0;
+      sel.forEach((k, i) => {
+        const v = i === sel.length - 1 ? 100 - acc : Math.round((cur[i]! / total) * 100);
+        acc += v;
+        next[k] = String(v);
+      });
+    }
+    setWeights(next);
+  };
   const quoteOk =
     sel.includes(quote) &&
     (available.find((a) => a.key === quote)?.quoteEligible ?? false);
+  const nameOk = name.trim().length > 0 && name.trim().length <= 32 && description.length <= 200;
   const valid =
+    nameOk &&
     sel.length >= MIN_ASSETS &&
     sel.length <= PRICED_MAX_ASSETS &&
     sum === 100 &&
@@ -78,7 +117,7 @@ export function CreateBasket({
   const create = async () => {
     if (!wallet || !valid) return;
     setBusy(true);
-    onToast("info", "Creating basket…", "submitting transaction");
+    onToast("info", "Creating fund…", "submitting transaction");
     try {
       const program = getProgram(wallet, connection);
       const creator = wallet.publicKey;
@@ -98,6 +137,8 @@ export function CreateBasket({
       await program.methods
         .createBasket(
           new BN(id),
+          name.trim(),
+          description.trim(),
           sel.length,
           quoteIndex,
           weightsBps,
@@ -149,7 +190,7 @@ export function CreateBasket({
       >
         <span className="section-title" style={{ fontSize: 15 }}>
           <IconPlus width={16} height={16} style={{ color: "var(--accent)" }} />
-          Create a basket
+          Create a fund
         </span>
         <IconChevron className="chev" width={18} height={18} />
       </button>
@@ -157,14 +198,39 @@ export function CreateBasket({
       <div
         className="collapse-body"
         style={{
-          maxHeight: open ? 720 : 0,
+          maxHeight: open ? 1320 : 0,
           opacity: open ? 1 : 0,
           marginTop: open ? 18 : 0,
         }}
       >
-        <div className="muted" style={{ marginBottom: 14 }}>
-          Pick 2–4 supported assets, set target weights (sum to 100%), and
-          choose the deposit (quote) asset.
+        <div className="form-grid" style={{ gridTemplateColumns: "1fr", marginTop: 0, marginBottom: 14 }}>
+          <div>
+            <label className="field-label">Fund name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={32} placeholder="e.g. Blue-chip Index" />
+          </div>
+          <div>
+            <label className="field-label">Description</label>
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={200}
+              placeholder="What this fund holds and why (optional)"
+            />
+          </div>
+        </div>
+
+        <div className="muted" style={{ marginBottom: 12 }}>
+          Pick 2–4 assets, set target weights (sum to 100%), and choose the
+          <span style={{ whiteSpace: "nowrap" }}> deposit asset <Info k="quoteAsset" /></span>.
+        </div>
+
+        <div className="presets">
+          <span className="presets-label">Start from</span>
+          {PRESETS.map((p) => (
+            <button key={p.label} type="button" className="preset" onClick={() => applyPreset(p)}>
+              {p.label}
+            </button>
+          ))}
         </div>
 
         <div className="chips">
@@ -184,10 +250,7 @@ export function CreateBasket({
                     : undefined
                 }
               >
-                <span
-                  className="cdot"
-                  style={{ background: assetColor(a.symbol, i) }}
-                />
+                <TokenLogo symbol={a.symbol} index={i} size={16} />
                 {a.symbol}
               </button>
             );
@@ -240,54 +303,53 @@ export function CreateBasket({
           })}
         </div>
 
-        <div
-          className="sumline"
-          style={{ color: sum === 100 ? "var(--ok)" : "var(--warn)" }}
-        >
-          {sum === 100 && <IconCheck width={13} height={13} />}
-          weights total: {sum}%
+        <div className="sumline-row">
+          <span className="sumline" style={{ color: sum === 100 ? "var(--ok)" : "var(--warn)" }}>
+            {sum === 100 && <IconCheck width={13} height={13} />}
+            weights total: {sum}%
+          </span>
+          {sum !== 100 && sel.length > 0 && (
+            <button type="button" className="normalize" onClick={normalize}>
+              Normalize to 100%
+            </button>
+          )}
         </div>
 
         <div className="form-grid">
           <div>
-            <label className="field-label">Abs drift threshold (%)</label>
-            <input
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
-              inputMode="decimal"
-            />
+            <label className="field-label">
+              Abs drift threshold (%) <Info k="driftAbs" />
+            </label>
+            <input value={threshold} onChange={(e) => setThreshold(e.target.value)} inputMode="decimal" />
+            <span className="field-hint">NAV-share drift that triggers a rebalance. ~1% typical.</span>
           </div>
           <div>
-            <label className="field-label">Rel drift threshold (%)</label>
-            <input
-              value={thresholdRel}
-              onChange={(e) => setThresholdRel(e.target.value)}
-              inputMode="decimal"
-            />
+            <label className="field-label">
+              Rel drift threshold (%) <Info k="driftRel" />
+            </label>
+            <input value={thresholdRel} onChange={(e) => setThresholdRel(e.target.value)} inputMode="decimal" />
+            <span className="field-hint">Per-asset drift vs its own target. ~1% typical.</span>
           </div>
           <div>
-            <label className="field-label">Rebalance interval (seconds)</label>
-            <input
-              value={intervalS}
-              onChange={(e) => setIntervalS(e.target.value)}
-              inputMode="numeric"
-            />
+            <label className="field-label">
+              Rebalance interval (s) <Info k="interval" />
+            </label>
+            <input value={intervalS} onChange={(e) => setIntervalS(e.target.value)} inputMode="numeric" />
+            <span className="field-hint">Min seconds between rebalances. ≥30 avoids churn.</span>
           </div>
           <div>
-            <label className="field-label">Rebalance spread (%, ≤1)</label>
-            <input
-              value={spread}
-              onChange={(e) => setSpread(e.target.value)}
-              inputMode="decimal"
-            />
+            <label className="field-label">
+              Rebalance spread (%, ≤1) <Info k="spread" />
+            </label>
+            <input value={spread} onChange={(e) => setSpread(e.target.value)} inputMode="decimal" />
+            <span className="field-hint">Edge paid to whoever rebalances. 0.1–0.5% typical.</span>
           </div>
           <div>
-            <label className="field-label">Creator deposit fee (%, ≤5)</label>
-            <input
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
-              inputMode="decimal"
-            />
+            <label className="field-label">
+              Creator deposit fee (%, ≤5) <Info k="fee" />
+            </label>
+            <input value={fee} onChange={(e) => setFee(e.target.value)} inputMode="decimal" />
+            <span className="field-hint">Your cut of each deposit, in basket tokens.</span>
           </div>
         </div>
 
@@ -303,9 +365,9 @@ export function CreateBasket({
           ) : !wallet ? (
             "Connect wallet"
           ) : valid ? (
-            "Create basket"
+            "Create fund"
           ) : (
-            "2–4 assets · weights = 100% · quote = a stable"
+            "Name it · 2–4 assets · weights = 100% · deposit asset = a stablecoin"
           )}
         </button>
       </div>

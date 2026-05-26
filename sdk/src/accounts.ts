@@ -17,6 +17,15 @@ export function depositRemaining(basket: PublicKey, assets: AssetEntry[], priceF
   return [...assets.map((a) => wr(vaultAta(basket, pk(a.mint)))), ...assets.map((a) => ro(priceFor(a.feed)))];
 }
 
+/** deposit_assets: [userAta_0..n-1, vault_0..n-1, price_0..n-1]. */
+export function depositAssetsRemaining(basket: PublicKey, user: PublicKey, assets: AssetEntry[], priceFor: PriceFor): AccountMeta[] {
+  return [
+    ...assets.map((a) => wr(ownerAta(user, pk(a.mint)))),
+    ...assets.map((a) => wr(vaultAta(basket, pk(a.mint)))),
+    ...assets.map((a) => ro(priceFor(a.feed))),
+  ];
+}
+
 /** withdraw: [vault_0..n-1, userAta_0..n-1]. */
 export function withdrawRemaining(basket: PublicKey, user: PublicKey, assets: AssetEntry[]): AccountMeta[] {
   return [...assets.map((a) => wr(vaultAta(basket, pk(a.mint)))), ...assets.map((a) => wr(ownerAta(user, pk(a.mint))))];

@@ -244,6 +244,61 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "depositAssets",
+      "docs": [
+        "Multi-asset (in-kind) deposit: contribute any subset of the fund's underlying",
+        "tokens; mint basket tokens by the total USD value, priced by NAV.",
+        "`remaining_accounts`: [user_ata_0..n-1, vault_0..n-1, price_0..n-1]."
+      ],
+      "discriminator": [
+        8,
+        21,
+        152,
+        34,
+        223,
+        94,
+        7,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "basketMint",
+          "writable": true
+        },
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "depositorBasket",
+          "writable": true
+        },
+        {
+          "name": "creatorBasket",
+          "docs": [
+            "Creator's basket-token ATA — receives the deposit fee. Must already exist."
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amounts",
+          "type": {
+            "vec": "u64"
+          }
+        }
+      ]
+    },
+    {
       "name": "initRegistry",
       "docs": [
         "Admin: create the basket registry (one-time). Lets clients/keeper enumerate",

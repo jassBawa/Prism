@@ -16,6 +16,20 @@ export function depositRemaining(basket: PublicKey, assets: OnchainAsset[], pric
   return [...assets.map((a) => wr(vaultAta(basket, a.mint))), ...assets.map((a) => ro(priceFor(a.feedHex)))];
 }
 
+/** deposit_assets: [userAta_0..n-1, vault_0..n-1, price_0..n-1]. */
+export function depositAssetsRemaining(
+  basket: PublicKey,
+  user: PublicKey,
+  assets: OnchainAsset[],
+  priceFor: PriceFor,
+): AccountMeta[] {
+  return [
+    ...assets.map((a) => wr(ownerAta(user, a.mint))),
+    ...assets.map((a) => wr(vaultAta(basket, a.mint))),
+    ...assets.map((a) => ro(priceFor(a.feedHex))),
+  ];
+}
+
 /** withdraw: [vault_0..n-1, userAta_0..n-1]. */
 export function withdrawRemaining(basket: PublicKey, user: PublicKey, assets: OnchainAsset[]): AccountMeta[] {
   return [...assets.map((a) => wr(vaultAta(basket, a.mint))), ...assets.map((a) => wr(ownerAta(user, a.mint)))];

@@ -108,6 +108,16 @@ pub mod mini_symmetry {
         instructions::deposit::deposit_handler(ctx, quote_amount)
     }
 
+    /// Multi-asset (in-kind) deposit: contribute any subset of the fund's underlying
+    /// tokens; mint basket tokens by the total USD value, priced by NAV.
+    /// `remaining_accounts`: [user_ata_0..n-1, vault_0..n-1, price_0..n-1].
+    pub fn deposit_assets<'info>(
+        ctx: Context<'_, '_, '_, 'info, DepositAssets<'info>>,
+        amounts: Vec<u64>,
+    ) -> Result<()> {
+        instructions::deposit_assets::deposit_assets_handler(ctx, amounts)
+    }
+
     /// Withdraw: burn basket tokens, receive in-kind pro-rata of every asset.
     /// Oracle-free, swap-free, atomic — the un-gameable exit.
     /// `remaining_accounts`: [vault_0..vault_{n-1}, user_ata_0..user_ata_{n-1}].

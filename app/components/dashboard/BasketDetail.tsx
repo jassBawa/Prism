@@ -1,13 +1,16 @@
 "use client";
 import type { Live } from "@/lib/types";
+import type { BasketView } from "@/lib/program";
 import { usd, num, pct, dateFmt } from "@/lib/format";
 import { Info } from "@/components/ui/Info";
 import { CopyAddr } from "@/components/ui/CopyAddr";
+import { IconExternal } from "@/components/ui/icons";
 import { AssetStack } from "./AssetDot";
 import { DriftBadge } from "./DriftBadge";
 import { AllocationRing } from "./AllocationRing";
 import { BasketTable } from "./BasketTable";
 import { TradePanel, type TxResult } from "./TradePanel";
+import { FundOps } from "./FundOps";
 
 interface Props {
   live: Live;
@@ -22,6 +25,10 @@ interface Props {
   onDeposit: () => void;
   onWithdraw: () => void;
   result: TxResult | null;
+  me?: string;
+  adminBusy: string | null;
+  onRebalance: (b: BasketView) => void;
+  onTogglePause: (b: BasketView, paused: boolean) => void;
 }
 
 export function BasketDetail({
@@ -37,6 +44,10 @@ export function BasketDetail({
   onDeposit,
   onWithdraw,
   result,
+  me,
+  adminBusy,
+  onRebalance,
+  onTogglePause,
 }: Props) {
   const b = live.view;
   const symbols = b.assets.map((a) => a.symbol);
@@ -62,6 +73,25 @@ export function BasketDetail({
           </div>
 
           {b.description && <p className="fund-desc">{b.description}</p>}
+
+          {(() => {
+            const socials = [
+              { label: "Website", url: b.website },
+              { label: "X", url: b.twitter },
+              { label: "Telegram", url: b.telegram },
+              { label: "Discord", url: b.discord },
+            ].filter((s) => s.url && s.url.trim().length > 0);
+            if (!socials.length) return null;
+            return (
+              <div className="fund-socials">
+                {socials.map((s) => (
+                  <a key={s.label} className="social-chip" href={s.url} target="_blank" rel="noreferrer">
+                    {s.label} <IconExternal width={12} height={12} />
+                  </a>
+                ))}
+              </div>
+            );
+          })()}
 
           <div className="fund-meta">
             <span className="fm">
@@ -147,6 +177,13 @@ export function BasketDetail({
             onDeposit={onDeposit}
             onWithdraw={onWithdraw}
             result={result}
+          />
+          <FundOps
+            live={live}
+            me={me}
+            adminBusy={adminBusy}
+            onRebalance={onRebalance}
+            onTogglePause={onTogglePause}
           />
         </aside>
       </div>

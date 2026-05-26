@@ -4,7 +4,6 @@ import { usePrism } from "@/components/PrismProvider";
 import { HowItWorks } from "@/components/dashboard/HowItWorks";
 import { BasketGrid } from "@/components/dashboard/BasketGrid";
 import { CreateBasket } from "@/components/dashboard/CreateBasket";
-import { AdminPanel } from "@/components/dashboard/AdminPanel";
 import { RightRail } from "@/components/rail/RightRail";
 import { timeAgo } from "@/lib/format";
 import { IconRefresh } from "@/components/ui/icons";
@@ -45,15 +44,9 @@ export function ExplorePage() {
           baskets={p.lives.map((l) => l.view)}
           onCreated={p.refresh}
           onToast={p.pushToast}
-          defaultOpen={!p.loading && p.lives.length === 0}
         />
       </section>
 
-      {p.connected && p.lives.length > 0 && (
-        <section className="section">
-          <AdminPanel lives={p.lives} me={p.me} adminBusy={p.adminBusy} onRebalance={p.rebalance} onTogglePause={p.togglePause} />
-        </section>
-      )}
       </div>
       <RightRail />
     </div>

@@ -145,7 +145,9 @@ export function PrismProvider({ children }: { children: ReactNode }) {
       }
       setUpdatedAt(Date.now());
     } catch (e) {
-      console.error(e);
+      // Benign on a polling loop (transient RPC hiccup). Warn, don't raise the dev
+      // error overlay; the next 8s tick recovers.
+      console.warn("[prism] refresh skipped:", (e as Error)?.message ?? e);
     } finally {
       setLoading(false);
     }

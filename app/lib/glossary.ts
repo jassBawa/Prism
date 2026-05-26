@@ -63,6 +63,10 @@ export const GLOSSARY = {
     term: "Pyth oracle",
     body: "The price feed the fund trusts. Stale or low-confidence prices are rejected on-chain, so the value can't be gamed.",
   },
+  deployCost: {
+    term: "Deployment cost",
+    body: "One-time rent + fees to create the fund's on-chain accounts (the basket, its token mint, and vaults). Roughly 0.02–0.04 SOL; most is refundable rent.",
+  },
 } satisfies Record<string, GlossaryEntry>;
 
 export type GlossaryKey = keyof typeof GLOSSARY;

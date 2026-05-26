@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { NETWORK } from "./PrismProvider";
+import { useNetworkLabel } from "@/lib/connection";
 import { SettingsMenu } from "./SettingsMenu";
-import { IconLayers, IconHome, IconCompass } from "@/components/ui/icons";
+import { IconHome, IconCompass } from "@/components/ui/icons";
 
 const NAV = [
   { href: "/", label: "Home", icon: IconHome, exact: true },
@@ -13,14 +13,14 @@ const NAV = [
 
 export function Sidebar() {
   const path = usePathname();
+  const network = useNetworkLabel();
   const active = (href: string, exact: boolean) => (exact ? path === href : path.startsWith(href));
 
   return (
     <aside className="sidebar">
       <Link href="/" className="side-brand">
-        <span className="brand-mark">
-          <IconLayers width={18} height={18} stroke="#ffffff" strokeWidth={2} />
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="brand-img" src="/brand/prism-icon.svg" alt="Prism" width={36} height={36} />
         <div>
           <div className="brand-name">Prism</div>
           <div className="brand-tag">index funds</div>
@@ -43,7 +43,7 @@ export function Sidebar() {
       <div className="side-foot">
         <span className="netpill">
           <span className="dot" />
-          {NETWORK}
+          {network}
         </span>
         <WalletMultiButton />
         <div className="side-actions">

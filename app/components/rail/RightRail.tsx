@@ -58,7 +58,7 @@ export function RightRail() {
         {trending.length === 0 ? (
           <div className="rcard-empty">No funds yet.</div>
         ) : (
-          <div className="rlist">
+          <div className="rlist funds">
             {trending.map((t, i) => {
               const pk = t.live.view.pubkey.toBase58();
               const syms = t.live.view.assets.map((a) => a.symbol);

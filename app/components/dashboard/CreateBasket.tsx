@@ -25,8 +25,9 @@ import {
 import { createBasketRemaining } from "@/lib/accounts";
 import type { ToastKind } from "@/lib/types";
 import { Info } from "@/components/ui/Info";
+import { Modal } from "@/components/ui/Modal";
 import { TokenLogo } from "@/components/ui/TokenLogo";
-import { IconPlus, IconChevron, IconCheck } from "@/components/ui/icons";
+import { IconPlus, IconCheck } from "@/components/ui/icons";
 
 // One-tap starting points (mirror the seeded demo baskets).
 const PRESETS: { label: string; sel: string[]; weights: Record<string, string>; quote: string }[] = [
@@ -53,6 +54,10 @@ export function CreateBasket({
   const [open, setOpen] = useState(defaultOpen);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [website, setWebsite] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [telegram, setTelegram] = useState("");
+  const [discord, setDiscord] = useState("");
   const [sel, setSel] = useState<string[]>(["sol", "usdc"]);
   const [weights, setWeights] = useState<Record<string, string>>({
     sol: "60",
@@ -107,8 +112,10 @@ export function CreateBasket({
     sel.includes(quote) &&
     (available.find((a) => a.key === quote)?.quoteEligible ?? false);
   const nameOk = name.trim().length > 0 && name.trim().length <= 32 && description.length <= 200;
+  const socialsOk = [website, twitter, telegram, discord].every((s) => s.trim().length <= 96);
   const valid =
     nameOk &&
+    socialsOk &&
     sel.length >= MIN_ASSETS &&
     sel.length <= PRICED_MAX_ASSETS &&
     sum === 100 &&
@@ -139,6 +146,10 @@ export function CreateBasket({
           new BN(id),
           name.trim(),
           description.trim(),
+          website.trim(),
+          twitter.trim(),
+          telegram.trim(),
+          discord.trim(),
           sel.length,
           quoteIndex,
           weightsBps,
@@ -183,26 +194,25 @@ export function CreateBasket({
   };
 
   return (
-    <div className="card">
-      <button
-        className={"collapse-toggle" + (open ? " open" : "")}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="section-title" style={{ fontSize: 15 }}>
-          <IconPlus width={16} height={16} style={{ color: "var(--accent)" }} />
-          Create a fund
-        </span>
-        <IconChevron className="chev" width={18} height={18} />
-      </button>
+    <>
+      <div className="create-cta">
+        <div className="create-cta-text">
+          <div className="create-cta-title">Launch your own index fund</div>
+          <div className="create-cta-sub">Pick 2–4 assets, set target weights, ship it on-chain.</div>
+        </div>
+        <button className="create-trigger" onClick={() => setOpen(true)}>
+          <IconPlus width={16} height={16} /> Create fund
+        </button>
+      </div>
 
-      <div
-        className="collapse-body"
-        style={{
-          maxHeight: open ? 1320 : 0,
-          opacity: open ? 1 : 0,
-          marginTop: open ? 18 : 0,
-        }}
-      >
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div className="create-modal">
+          <div className="cm-head">
+            <h2>Create a fund</h2>
+            <p>Pick 2–4 assets, set target weights that sum to 100%, and choose the deposit asset.</p>
+          </div>
+
+          <div className="cm-body">
         <div className="form-grid" style={{ gridTemplateColumns: "1fr", marginTop: 0, marginBottom: 14 }}>
           <div>
             <label className="field-label">Fund name</label>
@@ -216,6 +226,16 @@ export function CreateBasket({
               maxLength={200}
               placeholder="What this fund holds and why (optional)"
             />
+          </div>
+        </div>
+
+        <div className="social-block">
+          <span className="field-label">Social links (optional)</span>
+          <div className="social-grid">
+            <input value={website} onChange={(e) => setWebsite(e.target.value)} maxLength={96} placeholder="https://example.com" spellCheck={false} />
+            <input value={twitter} onChange={(e) => setTwitter(e.target.value)} maxLength={96} placeholder="https://x.com/…" spellCheck={false} />
+            <input value={telegram} onChange={(e) => setTelegram(e.target.value)} maxLength={96} placeholder="https://t.me/…" spellCheck={false} />
+            <input value={discord} onChange={(e) => setDiscord(e.target.value)} maxLength={96} placeholder="https://discord.gg/…" spellCheck={false} />
           </div>
         </div>
 
@@ -353,24 +373,33 @@ export function CreateBasket({
           </div>
         </div>
 
-        <button
-          className="act"
-          disabled={!wallet || !valid || busy}
-          onClick={create}
-        >
-          {busy ? (
-            <>
-              <span className="spinner" /> Creating…
-            </>
-          ) : !wallet ? (
-            "Connect wallet"
-          ) : valid ? (
-            "Create fund"
-          ) : (
-            "Name it · 2–4 assets · weights = 100% · deposit asset = a stablecoin"
-          )}
-        </button>
-      </div>
-    </div>
+          </div>
+
+          <div className="cm-foot">
+            <span className="cm-cost">
+              Deployment cost <span className="cm-cost-v">~0.03 SOL</span>
+              <Info k="deployCost" />
+            </span>
+            <button
+              className="act cm-create"
+              disabled={!wallet || !valid || busy}
+              onClick={create}
+            >
+              {busy ? (
+                <>
+                  <span className="spinner" /> Creating…
+                </>
+              ) : !wallet ? (
+                "Connect wallet"
+              ) : valid ? (
+                "Create fund"
+              ) : (
+                "Set name · 2–4 assets · weights = 100%"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

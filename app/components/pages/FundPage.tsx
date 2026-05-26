@@ -48,6 +48,10 @@ export function FundPage() {
           onDeposit={p.deposit}
           onWithdraw={p.withdraw}
           result={p.lastTx}
+          me={p.me}
+          adminBusy={p.adminBusy}
+          onRebalance={p.rebalance}
+          onTogglePause={p.togglePause}
         />
       )}
     </>

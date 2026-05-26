@@ -135,6 +135,22 @@ export type MiniSymmetry = {
           "type": "string"
         },
         {
+          "name": "website",
+          "type": "string"
+        },
+        {
+          "name": "twitter",
+          "type": "string"
+        },
+        {
+          "name": "telegram",
+          "type": "string"
+        },
+        {
+          "name": "discord",
+          "type": "string"
+        },
+        {
           "name": "numAssets",
           "type": "u8"
         },
@@ -825,6 +841,22 @@ export type MiniSymmetry = {
           },
           {
             "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "website",
+            "type": "string"
+          },
+          {
+            "name": "twitter",
+            "type": "string"
+          },
+          {
+            "name": "telegram",
+            "type": "string"
+          },
+          {
+            "name": "discord",
             "type": "string"
           },
           {

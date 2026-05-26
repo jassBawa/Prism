@@ -79,6 +79,10 @@ export interface BasketView {
   id: number;
   name: string;
   description: string;
+  website: string;
+  twitter: string;
+  telegram: string;
+  discord: string;
   createdTs: number;
   numAssets: number;
   quoteIndex: number;
@@ -104,6 +108,10 @@ interface RawBasket {
   id: BN;
   name: string;
   description: string;
+  website: string;
+  twitter: string;
+  telegram: string;
+  discord: string;
   createdTs: BN;
   numAssets: number;
   quoteIndex: number;
@@ -143,6 +151,10 @@ function decodeBasket(pubkey: PublicKey, a: RawBasket): BasketView {
     id: a.id.toNumber(),
     name: a.name,
     description: a.description,
+    website: a.website,
+    twitter: a.twitter,
+    telegram: a.telegram,
+    discord: a.discord,
     createdTs: a.createdTs.toNumber(),
     numAssets: n,
     quoteIndex: a.quoteIndex,

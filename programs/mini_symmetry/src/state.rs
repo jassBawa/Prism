@@ -12,6 +12,14 @@ pub struct Basket {
     pub name: String,
     #[max_len(200)]
     pub description: String,
+    #[max_len(96)]
+    pub website: String,
+    #[max_len(96)]
+    pub twitter: String,
+    #[max_len(96)]
+    pub telegram: String,
+    #[max_len(96)]
+    pub discord: String,
     pub created_ts: i64,
     pub num_assets: u8,
     pub quote_index: u8,

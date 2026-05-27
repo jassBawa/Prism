@@ -14,16 +14,15 @@ import { FundOps } from "./FundOps";
 
 interface Props {
   live: Live;
-  quoteSym: string;
   userBalance: number;
-  depAmt: string;
+  assetBalances: number[];
   wdAmt: string;
-  setDepAmt: (v: string) => void;
   setWdAmt: (v: string) => void;
   busy: "deposit" | "withdraw" | null;
   connected: boolean;
-  onDeposit: () => void;
+  onDepositAssets: (uiAmounts: number[]) => void;
   onWithdraw: () => void;
+  onRefresh: () => void;
   result: TxResult | null;
   me?: string;
   adminBusy: string | null;
@@ -33,16 +32,15 @@ interface Props {
 
 export function BasketDetail({
   live,
-  quoteSym,
   userBalance,
-  depAmt,
+  assetBalances,
   wdAmt,
-  setDepAmt,
   setWdAmt,
   busy,
   connected,
-  onDeposit,
+  onDepositAssets,
   onWithdraw,
+  onRefresh,
   result,
   me,
   adminBusy,
@@ -166,16 +164,15 @@ export function BasketDetail({
         <aside className="modal-side">
           <TradePanel
             live={live}
-            quoteSym={quoteSym}
-            depAmt={depAmt}
             wdAmt={wdAmt}
-            setDepAmt={setDepAmt}
             setWdAmt={setWdAmt}
             userBalance={userBalance}
+            assetBalances={assetBalances}
             busy={busy}
             connected={connected}
-            onDeposit={onDeposit}
+            onDepositAssets={onDepositAssets}
             onWithdraw={onWithdraw}
+            onRefresh={onRefresh}
             result={result}
           />
           <FundOps

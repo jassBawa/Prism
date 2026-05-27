@@ -15,7 +15,7 @@ import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } f
 import { RPC_URL } from "@/lib/constants";
 import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type BasketView } from "@/lib/program";
 import { computeState } from "@/lib/math";
-import { depositRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
+import { depositAssetsRemaining, depositRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
 import type { Live, Toast, ToastKind } from "@/lib/types";
 import type { TxResult } from "./dashboard/TradePanel";
@@ -38,6 +38,7 @@ interface PrismCtx {
   refresh: () => Promise<void>;
   holdingsUsd: number;
   userShares: Record<string, number>;
+  assetBalances: Record<string, number[]>;
   selected: string | null;
   setSelected: (pk: string | null) => void;
   sel: Live | null;
@@ -50,6 +51,7 @@ interface PrismCtx {
   adminBusy: string | null;
   lastTx: TxResult | null;
   deposit: () => Promise<void>;
+  depositAssets: (uiAmounts: number[]) => Promise<void>;
   withdraw: () => Promise<void>;
   rebalance: (b: BasketView) => Promise<void>;
   togglePause: (b: BasketView, paused: boolean) => Promise<void>;
@@ -73,6 +75,8 @@ export function PrismProvider({ children }: { children: ReactNode }) {
   const [depAmt, setDepAmt] = useState("100");
   const [wdAmt, setWdAmt] = useState("10");
   const [userShares, setUserShares] = useState<Record<string, number>>({});
+  // per-fund wallet balances of each underlying token (uiAmount, aligned to view.assets)
+  const [assetBalances, setAssetBalances] = useState<Record<string, number[]>>({});
   const [holdingsUsd, setHoldingsUsd] = useState(0);
   const [busy, setBusy] = useState<"deposit" | "withdraw" | null>(null);
   const [adminBusy, setAdminBusy] = useState<string | null>(null);
@@ -131,17 +135,24 @@ export function PrismProvider({ children }: { children: ReactNode }) {
       if (wallet) {
         let total = 0;
         const shares: Record<string, number> = {};
+        const balances: Record<string, number[]> = {};
         for (const l of out) {
           const s = Number(await tokenBal(ownerAta(wallet.publicKey, l.view.basketMint))) / 1e6;
           const unit = l.supply > 0 ? l.navUsd / l.supply : 1;
           total += s * unit;
           shares[l.view.pubkey.toBase58()] = s;
+          // the user's wallet balance of every underlying token (for multi-asset deposit)
+          balances[l.view.pubkey.toBase58()] = await Promise.all(
+            l.view.assets.map(async (a) => Number(await tokenBal(ownerAta(wallet.publicKey, a.mint))) / 10 ** a.decimals),
+          );
         }
         setHoldingsUsd(total);
         setUserShares(shares);
+        setAssetBalances(balances);
       } else {
         setHoldingsUsd(0);
         setUserShares({});
+        setAssetBalances({});
       }
       setUpdatedAt(Date.now());
     } catch (e) {
@@ -198,6 +209,51 @@ export function PrismProvider({ children }: { children: ReactNode }) {
       const sig = sigs[sigs.length - 1];
       if (sig) setLastTx({ action: "deposit", sig });
       pushToast("ok", `Deposited ${depAmt} ${quoteSym}`, sig?.slice(0, 24) + "…");
+      await refresh();
+    } catch (e) {
+      pushToast("err", "Deposit failed", (e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // Multi-asset (in-kind) deposit. `uiAmounts` is aligned to sel.view.assets.
+  const depositAssets = async (uiAmounts: number[]) => {
+    if (!wallet || !sel) return;
+    const b = sel.view;
+    const amounts = b.assets.map((a, i) => new BN(Math.round((uiAmounts[i] || 0) * 10 ** a.decimals)));
+    if (amounts.every((a) => a.isZero())) return;
+    setBusy("deposit");
+    pushToast("info", "Posting prices & depositing…", "approve in your wallet");
+    try {
+      const program = getProgram(wallet, connection);
+      const me = wallet.publicKey;
+      const depositorBasket = ownerAta(me, b.basketMint);
+      const creatorBasket = ownerAta(b.authority, b.basketMint);
+      const feeds = b.assets.map((a) => a.feedHex);
+      const sigs = await sendWithPyth(connection, wallet, feeds, async (priceFor) => [
+        createAssociatedTokenAccountIdempotentInstruction(me, depositorBasket, me, b.basketMint),
+        createAssociatedTokenAccountIdempotentInstruction(me, creatorBasket, b.authority, b.basketMint),
+        await program.methods
+          .depositAssets(amounts)
+          .accountsPartial({
+            basket: b.pubkey,
+            basketMint: b.basketMint,
+            depositor: me,
+            depositorBasket,
+            creatorBasket,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .remainingAccounts(depositAssetsRemaining(b.pubkey, me, b.assets, priceFor))
+          .instruction(),
+      ]);
+      const sig = sigs[sigs.length - 1];
+      if (sig) setLastTx({ action: "deposit", sig });
+      const parts = b.assets
+        .map((a, i) => (uiAmounts[i] > 0 ? `${uiAmounts[i]} ${a.symbol}` : null))
+        .filter(Boolean)
+        .join(" + ");
+      pushToast("ok", `Deposited ${parts}`, sig?.slice(0, 24) + "…");
       await refresh();
     } catch (e) {
       pushToast("err", "Deposit failed", (e as Error).message);
@@ -286,6 +342,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     refresh,
     holdingsUsd,
     userShares,
+    assetBalances,
     selected,
     setSelected,
     sel,
@@ -298,6 +355,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     adminBusy,
     lastTx,
     deposit,
+    depositAssets,
     withdraw,
     rebalance,
     togglePause,

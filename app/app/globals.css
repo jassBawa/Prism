@@ -3259,3 +3259,293 @@ button.act:disabled {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ================================================================ *
+ * Deposit: wallet balance, "fan into underlying tokens" animation  *
+ * ================================================================ */
+.bal-btn {
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s var(--ease-out);
+}
+.bal-btn:hover {
+  color: var(--accent);
+}
+.field.field-err input {
+  color: var(--danger);
+}
+.field.field-err {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line)) !important;
+}
+
+.dep-split {
+  margin-top: 14px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-1);
+}
+.dep-split-head {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.dsplit-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.dsplit-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.dsplit-bar {
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--track);
+  overflow: hidden;
+  display: block;
+}
+.dsplit-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  transform-origin: left;
+  animation: dsplitGrow 0.6s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes dsplitGrow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.dsplit-val {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.trade-empty {
+  text-align: left;
+}
+.trade-empty p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ================================================================ *
+ * Multi-asset deposit rows                                         *
+ * ================================================================ */
+.dep-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.dep-row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  animation: rowEnter 0.35s var(--ease) backwards;
+}
+.dep-row:nth-child(2) { animation-delay: 60ms; }
+.dep-row:nth-child(3) { animation-delay: 120ms; }
+.dep-row:nth-child(4) { animation-delay: 180ms; }
+.dep-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dep-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  font-size: 14px;
+}
+.dep-row-bal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.halfbtn {
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+  color: var(--text-dim);
+  border-radius: var(--r-xs);
+  padding: 3px 8px;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+.halfbtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dep-max {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  padding: 0;
+}
+.dep-max:hover {
+  color: var(--accent);
+}
+
+/* ================================================================ *
+ * Position card + deposit/withdraw modals                          *
+ * ================================================================ */
+.pos-card {
+  display: flex;
+  flex-direction: column;
+}
+.pos-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pos-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pos-sym {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+.pos-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.pos-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.pos-deposit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px !important;
+}
+.pos-withdraw {
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trade-modal {
+  width: min(540px, 90vw);
+}
+.trade-modal-sm {
+  width: min(440px, 90vw);
+}
+.tm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  /* clear the modal's absolute close button (X at right:16, ~32px wide) */
+  padding-right: 46px;
+}
+.tm-refresh {
+  flex: none;
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+  color: var(--muted);
+  border-radius: var(--r-sm);
+  padding: 7px;
+  cursor: pointer;
+  line-height: 0;
+  transition: color 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+}
+.tm-refresh:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.dep-rows {
+  gap: 18px;
+}
+.dep-row {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+}
+.dep-step {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.dep-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tm-preview {
+  margin-top: 14px;
+}
+.tm-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tm-foot {
+  margin-top: 18px;
+}
+.tm-foot .cm-create {
+  width: 100% !important;
+  min-width: 0;
+}

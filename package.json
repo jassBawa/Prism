@@ -11,6 +11,7 @@
     "dev:rpc": "pnpm app:env && pnpm --dir app dev",
     "dev:local": "RPC_URL=http://127.0.0.1:8899 pnpm app:env && pnpm --dir app dev",
     "seed": "tsx scripts/seed.ts",
+    "fund-wallet": "tsx scripts/fund-wallet.ts",
     "deposit": "tsx scripts/deposit.ts",
     "withdraw": "tsx scripts/withdraw.ts",
     "rebalance": "tsx scripts/rebalance.ts",

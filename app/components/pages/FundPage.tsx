@@ -37,16 +37,15 @@ export function FundPage() {
       ) : (
         <BasketDetail
           live={live}
-          quoteSym={live.view.assets[live.view.quoteIndex]?.symbol ?? "USDC"}
           userBalance={p.userShares[pubkey] ?? 0}
-          depAmt={p.depAmt}
+          assetBalances={p.assetBalances[pubkey] ?? []}
           wdAmt={p.wdAmt}
-          setDepAmt={p.setDepAmt}
           setWdAmt={p.setWdAmt}
           busy={p.busy}
           connected={p.connected}
-          onDeposit={p.deposit}
+          onDepositAssets={p.depositAssets}
           onWithdraw={p.withdraw}
+          onRefresh={p.refresh}
           result={p.lastTx}
           me={p.me}
           adminBusy={p.adminBusy}

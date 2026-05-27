@@ -21,6 +21,7 @@ interface Props {
   busy: "deposit" | "withdraw" | null;
   connected: boolean;
   onDepositAssets: (uiAmounts: number[]) => void;
+  onZap: (uiUsdcAmount: number) => void;
   onWithdraw: () => void;
   onRefresh: () => void;
   result: TxResult | null;
@@ -39,6 +40,7 @@ export function BasketDetail({
   busy,
   connected,
   onDepositAssets,
+  onZap,
   onWithdraw,
   onRefresh,
   result,
@@ -171,6 +173,7 @@ export function BasketDetail({
             busy={busy}
             connected={connected}
             onDepositAssets={onDepositAssets}
+            onZap={onZap}
             onWithdraw={onWithdraw}
             onRefresh={onRefresh}
             result={result}

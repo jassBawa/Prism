@@ -44,6 +44,7 @@ export function FundPage() {
           busy={p.busy}
           connected={p.connected}
           onDepositAssets={p.depositAssets}
+          onZap={p.depositZap}
           onWithdraw={p.withdraw}
           onRefresh={p.refresh}
           result={p.lastTx}

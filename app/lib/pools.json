@@ -1,0 +1,40 @@
+{
+  "cpmmProgram": "DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb",
+  "cpmmFeeAcc": "3oE58BKVt8KuYkGxx8zBojugnymWmBiyafWgMrnb6eYy",
+  "ammConfig": "5MxLgy9oPdTC3YgkiePHqr3EoCRD9uLVYRQS2ANAs7wy",
+  "pools": {
+    "usdc-sol": {
+      "poolId": "JCCQ8NNg3xEEiiBMNBzrSuaNFYA3tq41JaoHXVSWbDDa",
+      "token0Mint": "FFrX2Cc5di6CyH1XVM1eey6hbWtaYv6ekfcTDgN9tqCc",
+      "token1Mint": "J7PwFSfppizzwCf2AzZ81V2DUhZSdhHSxW1PTa7F7YVo",
+      "vault0": "BESdiDXzqApZp1wB7S4PYRkMA2sYnfNtA8Qy7cNKTZpf",
+      "vault1": "9YW3FMwqrK5vGk3qMYVDN7hDzN6WWbYUK3enPbNbfXNh",
+      "observation": "5Hc1QU43Lnq6UEQPzyaAG8mpAQXanFaHHddqBefn5tL5",
+      "authority": "CXniRufdq5xL8t8jZAPxsPZDpuudwuJSPWnbcD5Y5Nxq",
+      "lpMint": "5CqtV4GFv78rz34o1wNLGv7HgFcxo7deXoz5AWCTirzB",
+      "configId": "5MxLgy9oPdTC3YgkiePHqr3EoCRD9uLVYRQS2ANAs7wy"
+    },
+    "usdc-jup": {
+      "poolId": "9t514t7WHrABdRxGRi3aUaPCNDFLZLJuWbxyzeHV1oar",
+      "token0Mint": "CWVq6nVs59sZFF5P3dBpNYYdV31jVwcezJnxcp2E7qV9",
+      "token1Mint": "FFrX2Cc5di6CyH1XVM1eey6hbWtaYv6ekfcTDgN9tqCc",
+      "vault0": "7Yr5RZy1Grt1PBBnDPX6P5VPUXW4Ln4KZH9q1tp6KswP",
+      "vault1": "6Qc7WQFMxMTvoeLrqs5TKJcfXyR5th8SmRYn6kCkNCf5",
+      "observation": "HjxmCXDeU2ABppS62bNxJgktiYvyhC24pzmiBzVAbrLk",
+      "authority": "CXniRufdq5xL8t8jZAPxsPZDpuudwuJSPWnbcD5Y5Nxq",
+      "lpMint": "J1jGLsDjhw1JpqkBFCyygdMWiHFpV1hRKdkh8fGRZMfH",
+      "configId": "5MxLgy9oPdTC3YgkiePHqr3EoCRD9uLVYRQS2ANAs7wy"
+    },
+    "usdc-bonk": {
+      "poolId": "JCRFYANmJ4bGuJNVuGoJDN39K2cwuHgbqBjbDtdC3yEg",
+      "token0Mint": "FFrX2Cc5di6CyH1XVM1eey6hbWtaYv6ekfcTDgN9tqCc",
+      "token1Mint": "JCRyNEaxoLR6w7V68nuM3YjsxdM8DJanyzK8voiNqSYw",
+      "vault0": "6omXHHneqnrYRCEEsbhCbCZmFJpF66XLMJPhe4WjYL5t",
+      "vault1": "BbHSGMepSvLVoxPcLh7RCTCZDLFL13xctMBkUywQvs7N",
+      "observation": "3u7R1jJdxiVEHYfSbaKWCAeie5gDo1GQFWhUnTf66UvR",
+      "authority": "CXniRufdq5xL8t8jZAPxsPZDpuudwuJSPWnbcD5Y5Nxq",
+      "lpMint": "G6RFUMV8HCt2kL4iSWCC7LG2UwceF6RziSHhT3uG7oob",
+      "configId": "5MxLgy9oPdTC3YgkiePHqr3EoCRD9uLVYRQS2ANAs7wy"
+    }
+  }
+}

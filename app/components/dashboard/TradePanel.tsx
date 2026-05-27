@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { Live } from "@/lib/types";
 import { num, usd, shortAddr, explorerTx } from "@/lib/format";
+import { assetColor } from "@/lib/constants";
 import { Info } from "@/components/ui/Info";
 import { Modal } from "@/components/ui/Modal";
 import { TokenLogo } from "@/components/ui/TokenLogo";
@@ -21,6 +22,7 @@ interface Props {
   busy: "deposit" | "withdraw" | null;
   connected: boolean;
   onDepositAssets: (uiAmounts: number[]) => void;
+  onZap: (uiUsdcAmount: number) => void;
   onWithdraw: () => void;
   onRefresh: () => void;
   result: TxResult | null;
@@ -58,6 +60,7 @@ export function TradePanel({
   busy,
   connected,
   onDepositAssets,
+  onZap,
   onWithdraw,
   onRefresh,
   result,
@@ -65,15 +68,25 @@ export function TradePanel({
   const b = live.view;
   const assets = b.assets;
   const pk = b.pubkey.toBase58();
+  const qi = b.quoteIndex;
+  const quoteSym = assets[qi]?.symbol ?? "USDC";
   const unitPrice = live.supply > 0 ? live.navUsd / live.supply : 1;
   const positionUsd = userBalance * unitPrice;
 
   const [openDep, setOpenDep] = useState(false);
   const [openWd, setOpenWd] = useState(false);
+  const [mode, setMode] = useState<"zap" | "manual">("zap");
+  const [zapAmt, setZapAmt] = useState("");
+  const quoteBal = assetBalances[qi] ?? 0;
+  const zapNum = Number(zapAmt) || 0;
+  const zapOver = connected && zapNum > quoteBal + 1e-9;
 
   // per-asset deposit amounts (strings), reset when the fund / modal changes
   const [amts, setAmts] = useState<string[]>(() => assets.map(() => ""));
-  useEffect(() => setAmts(assets.map(() => "")), [pk, assets.length, openDep]);
+  useEffect(() => {
+    setAmts(assets.map(() => ""));
+    setZapAmt("");
+  }, [pk, assets.length, openDep]);
 
   const bal = (i: number) => assetBalances[i] ?? 0;
   const setAmt = (i: number, v: string) => setAmts((cur) => cur.map((x, j) => (j === i ? v : x)));
@@ -90,8 +103,19 @@ export function TradePanel({
   const wdUsd = wd * unitPrice;
   const perAsset = assets.map((a, i) => ({ symbol: a.symbol, usd: wdUsd * ((live.weightsBps[i] ?? 0) / 10000) }));
 
+  // zap preview: USDC split across underlying by target weight
+  const zapSplit = assets.map((a, i) => ({
+    symbol: a.symbol,
+    usd: zapNum * (a.targetWeightBps / 10000),
+    isQuote: i === qi,
+  }));
+
   const submitDeposit = () => {
     onDepositAssets(amts.map((a) => Number(a) || 0));
+    setOpenDep(false);
+  };
+  const submitZap = () => {
+    onZap(zapNum);
     setOpenDep(false);
   };
   const submitWithdraw = () => {
@@ -126,70 +150,123 @@ export function TradePanel({
           <div className="cm-head tm-head">
             <div>
               <h2>Deposit</h2>
-              <p>Add any of the fund&apos;s underlying tokens.</p>
+              <p>One token, swapped into the fund via Raydium — or add tokens manually.</p>
             </div>
             <button className="tm-refresh" type="button" onClick={onRefresh} aria-label="Refresh balances">
               <IconRefresh width={16} height={16} />
             </button>
           </div>
 
-          <div className="cm-body dep-rows">
-            {assets.map((a, i) => (
-              <div className="dep-row" key={a.symbol}>
-                <span className="dep-step">{i + 1}</span>
-                <div className="dep-row-main">
-                  <div className="dep-row-head">
-                    <span className="dep-token">
-                      <TokenLogo symbol={a.symbol} index={i} size={24} /> {a.symbol}
-                    </span>
-                    <span className="dep-row-bal">
-                      <button type="button" className="halfbtn" onClick={() => setAmt(i, String(bal(i) / 2))}>
-                        HALF
-                      </button>
-                      <button type="button" className="dep-max" onClick={() => setAmt(i, String(bal(i)))}>
-                        Max {num(bal(i), 4)}
-                      </button>
-                    </span>
-                  </div>
-                  <div className={"field" + ((Number(amts[i]) || 0) > bal(i) + 1e-9 ? " field-err" : "")}>
-                    <input
-                      value={amts[i]}
-                      onChange={(e) => setAmt(i, e.target.value)}
-                      inputMode="decimal"
-                      placeholder="0.00"
-                    />
-                    <span className="unit">{a.symbol}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="segmented dep-modeswitch">
+            <button type="button" className={"seg" + (mode === "zap" ? " on" : "")} onClick={() => setMode("zap")}>
+              Zap from {quoteSym}
+            </button>
+            <button type="button" className={"seg" + (mode === "manual" ? " on" : "")} onClick={() => setMode("manual")}>
+              Per token
+            </button>
           </div>
 
-          {anyAmt && depUsd > 0 && (
-            <div className="preview tm-preview">
-              <div className="prow">
-                <span>You deposit ≈ {usd(depUsd)}</span>
-                <span className="pv">≈ {num(netShares)} tokens</span>
+          {mode === "zap" ? (
+            <div className="cm-body">
+              <div className="th">
+                <span className="t">Deposit {quoteSym}</span>
+                {connected && (
+                  <button type="button" className="bal bal-btn" onClick={() => setZapAmt(String(quoteBal))}>
+                    balance {num(quoteBal, 2)} {quoteSym}
+                  </button>
+                )}
               </div>
+              <div className={"field" + (zapOver ? " field-err" : "")}>
+                <input value={zapAmt} onChange={(e) => setZapAmt(e.target.value)} inputMode="decimal" placeholder="0.00" />
+                <button className="maxbtn" type="button" onClick={() => setZapAmt(String(quoteBal))}>
+                  MAX
+                </button>
+              </div>
+              <div className="dep-split">
+                <div className="dep-split-head">Swapped via Raydium → {assets.length} underlying tokens</div>
+                {zapSplit.map((s, i) => (
+                  <div className="dsplit-row" key={s.symbol} style={{ "--i": i } as CSSProperties}>
+                    <span className="dsplit-id">
+                      <TokenLogo symbol={s.symbol} index={i} size={18} /> {s.symbol}
+                    </span>
+                    <span className="dsplit-bar" aria-hidden>
+                      <span style={{ width: `${assets[i]!.targetWeightBps / 100}%`, background: assetColor(s.symbol, i) }} />
+                    </span>
+                    <span className="dsplit-val">
+                      {zapNum > 0 ? usd(s.usd) : `${(assets[i]!.targetWeightBps / 100).toFixed(0)}%`}
+                      {s.isQuote ? " · kept" : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="cm-body dep-rows">
+              {assets.map((a, i) => (
+                <div className="dep-row" key={a.symbol}>
+                  <span className="dep-step">{i + 1}</span>
+                  <div className="dep-row-main">
+                    <div className="dep-row-head">
+                      <span className="dep-token">
+                        <TokenLogo symbol={a.symbol} index={i} size={24} /> {a.symbol}
+                      </span>
+                      <span className="dep-row-bal">
+                        <button type="button" className="halfbtn" onClick={() => setAmt(i, String(bal(i) / 2))}>
+                          HALF
+                        </button>
+                        <button type="button" className="dep-max" onClick={() => setAmt(i, String(bal(i)))}>
+                          Max {num(bal(i), 4)}
+                        </button>
+                      </span>
+                    </div>
+                    <div className={"field" + ((Number(amts[i]) || 0) > bal(i) + 1e-9 ? " field-err" : "")}>
+                      <input value={amts[i]} onChange={(e) => setAmt(i, e.target.value)} inputMode="decimal" placeholder="0.00" />
+                      <span className="unit">{a.symbol}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {anyAmt && depUsd > 0 && (
+                <div className="preview tm-preview">
+                  <div className="prow">
+                    <span>You deposit ≈ {usd(depUsd)}</span>
+                    <span className="pv">≈ {num(netShares)} tokens</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           <div className="tm-note">
-            <Info k="deployCost" /> A small, refundable rent (~0.002 SOL) may be charged for new token accounts.
+            <Info k="deployCost" /> {mode === "zap" ? "Swaps run on Raydium, then an in-kind deposit." : "A small, refundable rent (~0.002 SOL) may apply for new token accounts."}
           </div>
 
           <div className="cm-foot tm-foot">
-            <button className="act cm-create" disabled={busy !== null || !anyAmt || overBal} onClick={submitDeposit}>
-              {busy === "deposit" ? (
-                <>
-                  <span className="spinner" /> Depositing…
-                </>
-              ) : overBal ? (
-                "Not enough balance"
-              ) : (
-                "Deposit"
-              )}
-            </button>
+            {mode === "zap" ? (
+              <button className="act cm-create" disabled={busy !== null || zapNum <= 0 || zapOver} onClick={submitZap}>
+                {busy === "deposit" ? (
+                  <>
+                    <span className="spinner" /> Swapping & depositing…
+                  </>
+                ) : zapOver ? (
+                  `Not enough ${quoteSym}`
+                ) : (
+                  `Deposit ${quoteSym}`
+                )}
+              </button>
+            ) : (
+              <button className="act cm-create" disabled={busy !== null || !anyAmt || overBal} onClick={submitDeposit}>
+                {busy === "deposit" ? (
+                  <>
+                    <span className="spinner" /> Depositing…
+                  </>
+                ) : overBal ? (
+                  "Not enough balance"
+                ) : (
+                  "Deposit"
+                )}
+              </button>
+            )}
           </div>
         </div>
       </Modal>

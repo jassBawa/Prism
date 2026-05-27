@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { RPC_URL } from "@/lib/constants";
@@ -17,6 +17,7 @@ import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type B
 import { computeState } from "@/lib/math";
 import { depositAssetsRemaining, depositRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
+import { fetchSwapIxs, poolForPair } from "@/lib/zap";
 import type { Live, Toast, ToastKind } from "@/lib/types";
 import type { TxResult } from "./dashboard/TradePanel";
 
@@ -52,6 +53,7 @@ interface PrismCtx {
   lastTx: TxResult | null;
   deposit: () => Promise<void>;
   depositAssets: (uiAmounts: number[]) => Promise<void>;
+  depositZap: (uiUsdcAmount: number) => Promise<void>;
   withdraw: () => Promise<void>;
   rebalance: (b: BasketView) => Promise<void>;
   togglePause: (b: BasketView, paused: boolean) => Promise<void>;
@@ -262,6 +264,59 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Zap: deposit USDC, swap it into the fund's underlying tokens via Raydium CPMM
+  // (Tx A), then in-kind deposit the swapped tokens + the kept USDC slice (Tx B).
+  const depositZap = async (uiUsdcAmount: number) => {
+    if (!wallet || !sel || uiUsdcAmount <= 0) return;
+    const b = sel.view;
+    const me = wallet.publicKey;
+    const qi = b.quoteIndex;
+    const usdcMint = b.assets[qi]!.mint.toBase58();
+
+    // split by target weight: swap the non-quote slices, keep the quote slice
+    const items: { poolId: string; inputMint: string; amountInRaw: string }[] = [];
+    const swapIdx: number[] = [];
+    b.assets.forEach((a, i) => {
+      if (i === qi) return;
+      const usd = uiUsdcAmount * (a.targetWeightBps / 10000);
+      if (usd <= 0) return;
+      const pool = poolForPair(usdcMint, a.mint.toBase58());
+      if (!pool) throw new Error(`no Raydium pool for ${a.symbol}`);
+      items.push({ poolId: pool.poolId, inputMint: usdcMint, amountInRaw: String(Math.round(usd * 1e6)) });
+      swapIdx.push(i);
+    });
+    if (items.length === 0) {
+      // single-asset (USDC-only) fund — no swap needed, just deposit
+      await depositAssets(b.assets.map((_, i) => (i === qi ? uiUsdcAmount : 0)));
+      return;
+    }
+
+    setBusy("deposit");
+    pushToast("info", "Swapping via Raydium…", "approve the swap in your wallet");
+    try {
+      const before = await Promise.all(b.assets.map((a) => tokenBal(ownerAta(me, a.mint))));
+
+      const { ixs } = await fetchSwapIxs(me.toBase58(), items, 80, connection.rpcEndpoint);
+      const txA = new Transaction().add(...ixs);
+      txA.feePayer = me;
+      txA.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+      const signedA = await wallet.signTransaction(txA);
+      const sigA = await connection.sendRawTransaction(signedA.serialize());
+      await connection.confirmTransaction(sigA, "confirmed");
+
+      // measure what each swap actually delivered, then deposit it in-kind
+      const after = await Promise.all(b.assets.map((a) => tokenBal(ownerAta(me, a.mint))));
+      const uiAmounts = b.assets.map((a, i) => {
+        if (i === qi) return uiUsdcAmount * (a.targetWeightBps / 10000); // kept slice
+        return Number(after[i]! - before[i]!) / 10 ** a.decimals;
+      });
+      await depositAssets(uiAmounts);
+    } catch (e) {
+      pushToast("err", "Zap failed", (e as Error).message);
+      setBusy(null);
+    }
+  };
+
   const withdraw = async () => {
     if (!wallet || !sel) return;
     setBusy("withdraw");
@@ -356,6 +411,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     lastTx,
     deposit,
     depositAssets,
+    depositZap,
     withdraw,
     rebalance,
     togglePause,

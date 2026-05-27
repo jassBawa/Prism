@@ -3549,3 +3549,8 @@ button.act:disabled {
   width: 100% !important;
   min-width: 0;
 }
+
+/* deposit modal: zap/manual mode switch */
+.dep-modeswitch {
+  margin: 16px 0 6px;
+}

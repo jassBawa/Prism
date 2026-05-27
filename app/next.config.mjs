@@ -2,6 +2,9 @@
 const config = {
   reactStrictMode: false,
   transpilePackages: ["@pythnetwork/pyth-solana-receiver", "@coral-xyz/anchor"],
+  // Keep the heavy Raydium SDK out of the webpack bundle — required natively in the
+  // node API route (avoids the exportsFields override below breaking its resolution).
+  experimental: { serverComponentsExternalPackages: ["@raydium-io/raydium-sdk-v2"] },
   webpack: (cfg, { webpack }) => {
     cfg.resolve.fallback = { ...cfg.resolve.fallback, fs: false, path: false, crypto: false };
     // solana-utils pulls jito-ts (Jito bundles) which we don't use — stub it out.

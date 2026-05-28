@@ -12,6 +12,7 @@
     "dev:local": "RPC_URL=http://127.0.0.1:8899 pnpm app:env && pnpm --dir app dev",
     "seed": "tsx scripts/seed.ts",
     "raydium-pools": "tsx scripts/raydium-pools.ts",
+    "token-metadata": "tsx scripts/token-metadata.ts",
     "fund-wallet": "tsx scripts/fund-wallet.ts",
     "deposit": "tsx scripts/deposit.ts",
     "withdraw": "tsx scripts/withdraw.ts",
@@ -31,6 +32,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
+    "@metaplex-foundation/mpl-token-metadata": "2.13.0",
     "@pythnetwork/hermes-client": "^3.1.0",
     "@pythnetwork/pyth-solana-receiver": "^0.16.0",
     "@raydium-io/raydium-sdk-v2": "0.2.49-alpha",

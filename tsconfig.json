@@ -12,5 +12,5 @@
     "types": ["node"]
   },
   "include": ["sdk/**/*.ts", "scripts/**/*.ts", "keeper/**/*.ts", "ops/**/*.ts"],
-  "exclude": ["node_modules", "target", "app", "landing"]
+  "exclude": ["node_modules", "target", "app"]
 }

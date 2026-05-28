@@ -7,7 +7,7 @@ import { SettingsMenu } from "./SettingsMenu";
 import { IconHome, IconCompass } from "@/components/ui/icons";
 
 const NAV = [
-  { href: "/", label: "Home", icon: IconHome, exact: true },
+  { href: "/app", label: "Home", icon: IconHome, exact: true },
   { href: "/explore", label: "Explore", icon: IconCompass, exact: false },
 ];
 
@@ -18,7 +18,7 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <Link href="/" className="side-brand">
+      <Link href="/app" className="side-brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="brand-img" src="/brand/prism-icon.svg" alt="Prism" width={36} height={36} />
         <div>

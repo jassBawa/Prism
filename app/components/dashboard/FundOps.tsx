@@ -61,7 +61,9 @@ export function FundOps({ live, me, adminBusy, onRebalance, onTogglePause }: Pro
       </button>
 
       <p className="ops-note">
-        Rebalancing is permissionless — anyone can run it for the spread reward.
+        Permissionless: you act as the keeper — supply the under-weight token, receive the
+        over-weight one plus the {pct(b.spreadBps)} spread as your reward. Two wallet approvals
+        (post Pyth prices, then rebalance).
         {owner ? " As the creator, you can also pause deposits." : ""}
       </p>
 

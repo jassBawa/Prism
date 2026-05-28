@@ -99,6 +99,13 @@ export function PrismProvider({ children }: { children: ReactNode }) {
 
   const dismissToast = useCallback((id: number) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
 
+  // Pyth-consuming actions sign 2 txs (post on-chain prices, then the action).
+  // Toast each wallet prompt so the double approval isn't a surprise.
+  const stepToast = (action: string) => (step: number, total: number) => {
+    if (total <= 1) return;
+    pushToast("info", `Approve ${step} of ${total} in your wallet`, step < total ? "posting live Pyth prices on-chain" : action);
+  };
+
   const tokenBal = useCallback(
     async (acc: PublicKey): Promise<bigint> => {
       try {
@@ -207,7 +214,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
           })
           .remainingAccounts(depositRemaining(b.pubkey, b.assets, priceFor))
           .instruction(),
-      ]);
+      ], stepToast("minting your fund tokens"));
       const sig = sigs[sigs.length - 1];
       if (sig) setLastTx({ action: "deposit", sig });
       pushToast("ok", `Deposited ${depAmt} ${quoteSym}`, sig?.slice(0, 24) + "…");
@@ -248,7 +255,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
           })
           .remainingAccounts(depositAssetsRemaining(b.pubkey, me, b.assets, priceFor))
           .instruction(),
-      ]);
+      ], stepToast("depositing into the fund"));
       const sig = sigs[sigs.length - 1];
       if (sig) setLastTx({ action: "deposit", sig });
       const parts = b.assets
@@ -352,7 +359,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
   const rebalance = async (b: BasketView) => {
     if (!wallet) return;
     setAdminBusy(b.pubkey.toBase58());
-    pushToast("info", "Rebalancing…", "posting prices — approve in your wallet");
+    pushToast("info", "Rebalancing…", "you'll approve 2 transactions: post prices, then rebalance");
     try {
       const program = getProgram(wallet, connection);
       const me = wallet.publicKey;
@@ -363,7 +370,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
           .accountsPartial({ basket: b.pubkey, keeper: me, tokenProgram: TOKEN_PROGRAM_ID })
           .remainingAccounts(rebalanceRemaining(b.pubkey, me, b.assets, priceFor))
           .instruction(),
-      ]);
+      ], stepToast("rebalancing the fund"));
       pushToast("ok", "Rebalanced", sigs[sigs.length - 1]?.slice(0, 24) + "…");
       await refresh();
     } catch (e) {

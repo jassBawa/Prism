@@ -45,6 +45,7 @@ export async function sendWithPyth(
   wallet: SignerWallet,
   feedsHex: string[],
   buildIxs: (priceFor: PriceFor) => Promise<TransactionInstruction[]>,
+  onStep?: (step: number, total: number) => void,
 ): Promise<string[]> {
   const { binary } = await hermesLatest(feedsHex);
 
@@ -62,7 +63,9 @@ export async function sendWithPyth(
 
   const built = await builder.buildVersionedTransactions({ computeUnitPriceMicroLamports: 50_000 });
   const sigs: string[] = [];
-  for (const { tx, signers } of built) {
+  for (let i = 0; i < built.length; i++) {
+    const { tx, signers } = built[i]!;
+    onStep?.(i + 1, built.length);
     if (signers.length) tx.sign(signers);
     const signed = await wallet.signTransaction(tx);
     const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: true });

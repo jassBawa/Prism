@@ -19,6 +19,20 @@ export function cpmmIds(): { program: PublicKey; feeAcc: PublicKey; ammConfig: P
   };
 }
 
+/** getPoolInfoFromRpc with retries — public devnet RPC is flaky / rate-limited. */
+export async function getPoolRpc(raydium: RaydiumCtx, poolId: string, tries = 4) {
+  let lastErr: unknown;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await raydium.cpmm.getPoolInfoFromRpc(poolId);
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 600 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 /** Build legacy CPMM swap instructions: swap `amountIn` of `inputMint` through `poolId`. */
 export async function buildCpmmSwapIxs(
   raydium: RaydiumCtx,
@@ -27,7 +41,7 @@ export async function buildCpmmSwapIxs(
   amountIn: BN,
   slippageBps = 50,
 ): Promise<{ ixs: TransactionInstruction[]; expectedOut: BN }> {
-  const { poolInfo, poolKeys, rpcData } = await raydium.cpmm.getPoolInfoFromRpc(poolId);
+  const { poolInfo, poolKeys, rpcData } = await getPoolRpc(raydium, poolId);
   const baseIn = inputMint === poolInfo.mintA.address;
   const inputReserve = baseIn ? rpcData.baseReserve : rpcData.quoteReserve;
   const outputReserve = baseIn ? rpcData.quoteReserve : rpcData.baseReserve;

@@ -5,7 +5,7 @@ import { getConnection, loadKeypair } from "../sdk/src/client.js";
 import { SUPPORTED_ASSETS } from "../sdk/src/constants.js";
 import { loadBasketsConfig, loadPoolsConfig, pk } from "../sdk/src/config.js";
 import { latestPricesMicro } from "../sdk/src/pyth.js";
-import { loadRaydium, buildCpmmSwapIxs } from "../sdk/src/raydium.js";
+import { loadRaydium, buildCpmmSwapIxs, getPoolRpc } from "../sdk/src/raydium.js";
 
 // Arbitrage each CPMM pool back to the Pyth oracle price (admin = LP, holds both sides).
 // Test swaps skew the pools off-oracle → deposits slip; this resets them.
@@ -37,7 +37,7 @@ async function main() {
     console.log(`\n[${poolKey}] oracle $${oracle}`);
 
     for (let iter = 0; iter < 12; iter++) {
-      const { poolInfo, rpcData } = await raydium.cpmm.getPoolInfoFromRpc(pool.poolId);
+      const { poolInfo, rpcData } = await getPoolRpc(raydium, pool.poolId);
       const usdcIsA = poolInfo.mintA.address === usdc;
       const usdcRes = Number(usdcIsA ? rpcData.baseReserve : rpcData.quoteReserve);
       const assetRes = Number(usdcIsA ? rpcData.quoteReserve : rpcData.baseReserve);

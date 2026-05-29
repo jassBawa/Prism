@@ -12,6 +12,7 @@
     "dev:local": "RPC_URL=http://127.0.0.1:8899 pnpm app:env && pnpm --dir app dev",
     "seed": "tsx scripts/seed.ts",
     "raydium-pools": "tsx scripts/raydium-pools.ts",
+    "rebalance-pools": "tsx scripts/rebalance-pools.ts",
     "token-metadata": "tsx scripts/token-metadata.ts",
     "fund-wallet": "tsx scripts/fund-wallet.ts",
     "deposit": "tsx scripts/deposit.ts",

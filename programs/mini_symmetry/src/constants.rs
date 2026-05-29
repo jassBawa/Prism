@@ -26,6 +26,13 @@ pub const MAX_SPREAD_BPS: u16 = 100;
 /// to the creator on deposit.
 pub const MAX_FEE_BPS: u16 = 500;
 
+/// Raydium CPMM program (devnet) — target of the rebalance swap CPI.
+pub const CPMM_PROGRAM: Pubkey = pubkey!("DRaycpLY18LhpbydsBWbVJtxpNv9oXPgjRSfpF2bWpYb");
+/// swap_base_input discriminator = sha256("global:swap_base_input")[0..8].
+pub const CPMM_SWAP_DISC: [u8; 8] = [0x8f, 0xbe, 0x5a, 0xda, 0xc4, 0x1e, 0x33, 0xde];
+/// Max slippage the on-chain rebalance swap tolerates vs the Pyth oracle (1.5%).
+pub const MAX_REBAL_SLIPPAGE_BPS: u128 = 150;
+
 /// Pyth Solana Receiver program — owner of valid PriceUpdateV2 accounts.
 pub const PYTH_RECEIVER_PROGRAM: Pubkey = pubkey!("rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ");
 /// Protocol admin — may curate the supported-asset allowlist.

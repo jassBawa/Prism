@@ -60,4 +60,10 @@ pub enum MsError {
     DuplicatePrice,
     #[msg("basket registry is full")]
     RegistryFull,
+    #[msg("rebalance swap must target the configured Raydium CPMM program")]
+    BadCpmmProgram,
+    #[msg("swap accounts don't match the required rebalance direction")]
+    SwapDirectionMismatch,
+    #[msg("asset already within target ratio — nothing to rebalance")]
+    AlreadyBalanced,
 }

@@ -4,6 +4,7 @@ pub mod deposit;
 pub mod deposit_assets;
 pub mod init_registry;
 pub mod rebalance;
+pub mod rebalance_one;
 pub mod set_supported_asset;
 pub mod withdraw;
 
@@ -13,5 +14,6 @@ pub use deposit::*;
 pub use deposit_assets::*;
 pub use init_registry::*;
 pub use rebalance::*;
+pub use rebalance_one::*;
 pub use set_supported_asset::*;
 pub use withdraw::*;

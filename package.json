@@ -13,6 +13,7 @@
     "seed": "tsx scripts/seed.ts",
     "raydium-pools": "tsx scripts/raydium-pools.ts",
     "rebalance-pools": "tsx scripts/rebalance-pools.ts",
+    "rebalance-real": "tsx scripts/rebalance-real.ts",
     "token-metadata": "tsx scripts/token-metadata.ts",
     "fund-wallet": "tsx scripts/fund-wallet.ts",
     "deposit": "tsx scripts/deposit.ts",

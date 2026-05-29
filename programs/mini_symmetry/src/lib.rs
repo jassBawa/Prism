@@ -136,6 +136,15 @@ pub mod mini_symmetry {
         instructions::rebalance::rebalance_handler(ctx)
     }
 
+    /// Real rebalance of ONE asset vs the quote via a Raydium CPMM swap (basket PDA signs),
+    /// oracle-bounded. `remaining_accounts`: [price_i, price_q, <13 CPMM swap accts>, cpmm_program].
+    pub fn rebalance_one<'info>(
+        ctx: Context<'_, '_, '_, 'info, RebalanceOne<'info>>,
+        asset_index: u8,
+    ) -> Result<()> {
+        instructions::rebalance_one::rebalance_one_handler(ctx, asset_index)
+    }
+
     /// Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,
     /// and deposit fee.
     pub fn set_params(

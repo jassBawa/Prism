@@ -1,6 +1,7 @@
 import type { AccountMeta, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { ownerAta, supportedAssetPda, vaultAta } from "./pdas.js";
-import { pk, type AssetEntry } from "./config.js";
+import { pk, type AssetEntry, type PoolEntry } from "./config.js";
 
 const ro = (pubkey: PublicKey): AccountMeta => ({ pubkey, isSigner: false, isWritable: false });
 const wr = (pubkey: PublicKey): AccountMeta => ({ pubkey, isSigner: false, isWritable: true });
@@ -23,6 +24,42 @@ export function depositAssetsRemaining(basket: PublicKey, user: PublicKey, asset
     ...assets.map((a) => wr(ownerAta(user, pk(a.mint)))),
     ...assets.map((a) => wr(vaultAta(basket, pk(a.mint)))),
     ...assets.map((a) => ro(priceFor(a.feed))),
+  ];
+}
+
+/** rebalance_one: [price_i, price_q, <13 CPMM swap accts>, cpmm_program] (16).
+ *  `buy` = swap quote -> asset (asset under-weight); else asset -> quote. */
+export function rebalanceOneRemaining(
+  basket: PublicKey,
+  asset: AssetEntry,
+  quote: AssetEntry,
+  pool: PoolEntry,
+  buy: boolean,
+  priceFor: PriceFor,
+  cpmmProgram: PublicKey,
+): AccountMeta[] {
+  const inMint = buy ? pk(quote.mint) : pk(asset.mint);
+  const outMint = buy ? pk(asset.mint) : pk(quote.mint);
+  const inIsToken0 = inMint.toBase58() === pool.token0Mint;
+  const inPoolVault = pk(inIsToken0 ? pool.vault0 : pool.vault1);
+  const outPoolVault = pk(inIsToken0 ? pool.vault1 : pool.vault0);
+  return [
+    ro(priceFor(asset.feed)), // price_i
+    ro(priceFor(quote.feed)), // price_q
+    ro(basket), //  0 payer (basket PDA — signs the CPI internally)
+    ro(pk(pool.authority)), //  1 authority
+    ro(pk(pool.configId)), //  2 amm_config
+    wr(pk(pool.poolId)), //  3 pool_state
+    wr(vaultAta(basket, inMint)), //  4 input_token_account (basket vault)
+    wr(vaultAta(basket, outMint)), //  5 output_token_account
+    wr(inPoolVault), //  6 input_vault (pool)
+    wr(outPoolVault), //  7 output_vault (pool)
+    ro(TOKEN_PROGRAM_ID), //  8 input_token_program
+    ro(TOKEN_PROGRAM_ID), //  9 output_token_program
+    ro(inMint), // 10 input_mint
+    ro(outMint), // 11 output_mint
+    wr(pk(pool.observation)), // 12 observation_state
+    ro(cpmmProgram),
   ];
 }
 

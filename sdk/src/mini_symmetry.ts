@@ -386,6 +386,40 @@ export type MiniSymmetry = {
       "args": []
     },
     {
+      "name": "rebalanceOne",
+      "docs": [
+        "Real rebalance of ONE asset vs the quote via a Raydium CPMM swap (basket PDA signs),",
+        "oracle-bounded. `remaining_accounts`: [price_i, price_q, <13 CPMM swap accts>, cpmm_program]."
+      ],
+      "discriminator": [
+        10,
+        108,
+        160,
+        108,
+        59,
+        202,
+        80,
+        200
+      ],
+      "accounts": [
+        {
+          "name": "basket",
+          "writable": true
+        },
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "assetIndex",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "setParams",
       "docs": [
         "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
@@ -841,6 +875,21 @@ export type MiniSymmetry = {
       "code": 6028,
       "name": "registryFull",
       "msg": "basket registry is full"
+    },
+    {
+      "code": 6029,
+      "name": "badCpmmProgram",
+      "msg": "rebalance swap must target the configured Raydium CPMM program"
+    },
+    {
+      "code": 6030,
+      "name": "swapDirectionMismatch",
+      "msg": "swap accounts don't match the required rebalance direction"
+    },
+    {
+      "code": 6031,
+      "name": "alreadyBalanced",
+      "msg": "asset already within target ratio — nothing to rebalance"
     }
   ],
   "types": [

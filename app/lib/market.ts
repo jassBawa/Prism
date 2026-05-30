@@ -5,6 +5,8 @@ export interface MarketPrice {
   symbol: string;
   price: number;
   change24h: number;
+  /** CoinGecko icon URL (empty if unavailable → falls back to a letter badge). */
+  image: string;
 }
 
 // CoinGecko id → ticker symbol.

@@ -19,7 +19,7 @@ export function Info({ k, align = "left" }: { k: GlossaryKey; align?: "left" | "
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
       >
-        <IconInfo width={13} height={13} />
+        <IconInfo width={15} height={15} />
       </button>
       {open && (
         <span className={"info-pop " + align} role="tooltip">

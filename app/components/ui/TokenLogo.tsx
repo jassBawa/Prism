@@ -1,10 +1,37 @@
-import { assetColor } from "@/lib/constants";
+import { assetColor, tokenIcon } from "@/lib/constants";
 
 /**
- * Consistent round coin avatar — a brand-colored gradient circle with the
- * token's initial. Uniform across every token (no mismatched logo art).
+ * Round token avatar. With `src` (a CoinGecko icon URL) it shows the real logo;
+ * otherwise it falls back to a brand-colored gradient circle with the initial.
  */
-export function TokenLogo({ symbol, size = 22, index = 0 }: { symbol: string; size?: number; index?: number }) {
+export function TokenLogo({
+  symbol,
+  size = 22,
+  index = 0,
+  src,
+}: {
+  symbol: string;
+  size?: number;
+  index?: number;
+  src?: string;
+}) {
+  const url = src || tokenIcon(symbol);
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className="coin coin-img"
+        src={url}
+        alt={symbol}
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        title={symbol}
+        loading="lazy"
+      />
+    );
+  }
+
   const c = assetColor(symbol, index);
   return (
     <span

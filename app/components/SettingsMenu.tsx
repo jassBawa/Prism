@@ -11,7 +11,6 @@ import {
   type Net,
   type RpcMode,
 } from "@/lib/connection";
-import { useTheme } from "@/lib/theme";
 import { IconSettings, IconLogout } from "@/components/ui/icons";
 
 const VERSION = "0.1.0";
@@ -20,7 +19,6 @@ const VERSION = "0.1.0";
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const { connected, disconnect } = useWallet();
-  const [theme, setTheme] = useTheme();
   const signOut = () => void disconnect().catch(() => {});
 
   const saved = readConfig();
@@ -59,26 +57,6 @@ export function SettingsMenu() {
           <div className="settings-head">
             <h2>Settings</h2>
             <p>Appearance and the connection the app talks to.</p>
-          </div>
-
-          <div className="set-field">
-            <span className="set-flabel">Appearance</span>
-            <div className="segmented">
-              <button
-                type="button"
-                className={"seg" + (theme === "dark" ? " on" : "")}
-                onClick={() => setTheme("dark")}
-              >
-                Dark
-              </button>
-              <button
-                type="button"
-                className={"seg" + (theme === "light" ? " on" : "")}
-                onClick={() => setTheme("light")}
-              >
-                Light
-              </button>
-            </div>
           </div>
 
           <div className="set-field">

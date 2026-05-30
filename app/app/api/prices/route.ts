@@ -10,17 +10,28 @@ let lastGood: MarketPrice[] = [];
 export async function GET() {
   try {
     const ids = MARKET_COINS.map((c) => c.id).join(",");
+    // /coins/markets returns the icon URL alongside price + 24h change.
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=24h`,
       { next: { revalidate: 60 } },
     );
     if (!res.ok) throw new Error(`coingecko ${res.status}`);
-    const j = (await res.json()) as Record<string, { usd?: number; usd_24h_change?: number }>;
-    const data: MarketPrice[] = MARKET_COINS.map((c) => ({
-      symbol: c.symbol,
-      price: j[c.id]?.usd ?? 0,
-      change24h: j[c.id]?.usd_24h_change ?? 0,
-    })).filter((p) => p.price > 0);
+    const arr = (await res.json()) as Array<{
+      id: string;
+      image?: string;
+      current_price?: number;
+      price_change_percentage_24h?: number;
+    }>;
+    const byId = new Map(arr.map((x) => [x.id, x]));
+    const data: MarketPrice[] = MARKET_COINS.map((c) => {
+      const m = byId.get(c.id);
+      return {
+        symbol: c.symbol,
+        price: m?.current_price ?? 0,
+        change24h: m?.price_change_percentage_24h ?? 0,
+        image: m?.image ?? "",
+      };
+    }).filter((p) => p.price > 0);
     if (data.length) lastGood = data;
     return NextResponse.json(data.length ? data : lastGood);
   } catch {

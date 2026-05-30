@@ -2,7 +2,7 @@
 import type { Live } from "@/lib/types";
 import { useMarketPrices } from "@/lib/prices";
 import { chgMap, fundChange24h } from "@/lib/funds";
-import { PrismArt } from "@/components/ui/PrismArt";
+import { FundEmptyState } from "./FundEmptyState";
 import { BasketRow } from "./BasketRow";
 
 interface Props {
@@ -29,14 +29,11 @@ export function BasketGrid({ lives, selected, loading, onSelect }: Props) {
 
   if (lives.length === 0) {
     return (
-      <div className="empty">
-        <PrismArt size={120} />
-        <div className="et">No funds on-chain yet</div>
-        <div className="es">
-          Be the first. Pick your assets, set the target weights, and ship a self-rebalancing index in a couple
-          of clicks.
-        </div>
-      </div>
+      <FundEmptyState
+        title="No funds on-chain yet"
+        description="Be the first. Pick your assets, set the target weights, and ship a self-rebalancing index in a couple of clicks."
+        size={96}
+      />
     );
   }
 

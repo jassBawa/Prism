@@ -89,6 +89,22 @@ export const COLORS: Record<string, string> = {
   USDC: "var(--usdc)",
 };
 
+// CoinGecko icon URLs per token symbol — used as the static fallback so fund
+// cards/pages show real logos even without live market data. Unknown symbols
+// fall back to a letter badge.
+export const TOKEN_ICONS: Record<string, string> = {
+  SOL: "https://assets.coingecko.com/coins/images/4128/large/solana.png",
+  JUP: "https://assets.coingecko.com/coins/images/34188/large/jup.png",
+  BONK: "https://assets.coingecko.com/coins/images/28600/large/bonk.jpg",
+  USDC: "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+  BTC: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
+  ETH: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+};
+
+/** CoinGecko icon URL for a token symbol ("" if unknown). */
+export const tokenIcon = (symbol: string): string =>
+  TOKEN_ICONS[symbol.toUpperCase()] ?? "";
+
 // Darkened for contrast on the light theme.
 const FALLBACK_PALETTE = [
   "#4f6bed",

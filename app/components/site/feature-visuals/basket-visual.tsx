@@ -1,3 +1,5 @@
+import { TOKEN_ICON } from "@/lib/site/tokens";
+
 export const BASKET_ASSETS = [
   { label: "SOL", gradient: "from-[#9945FF] to-[#14F195]" },
   { label: "JUP", gradient: "from-sky-400 to-blue-600" },
@@ -31,9 +33,17 @@ export function BasketVisual() {
           {BASKET_ASSETS.map(({ label, gradient }) => (
             <div
               key={label}
-              className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-[10px] font-bold text-white shadow-sm`}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} p-[3px] shadow-sm`}
             >
-              {label}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={TOKEN_ICON[label]}
+                alt={label}
+                width={38}
+                height={38}
+                className="size-full rounded-[0.55rem] bg-white object-contain p-0.5"
+                loading="lazy"
+              />
             </div>
           ))}
         </div>

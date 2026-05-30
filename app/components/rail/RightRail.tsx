@@ -36,7 +36,7 @@ export function RightRail() {
             {movers.map((m) => (
               <div className="rrow" key={m.symbol}>
                 <span className="rrow-id">
-                  <TokenLogo symbol={m.symbol} size={22} />
+                  <TokenLogo symbol={m.symbol} src={m.image} size={22} />
                   <span className="rrow-sym">{m.symbol}</span>
                 </span>
                 <span className="rrow-price">{tickerPrice(m.price)}</span>

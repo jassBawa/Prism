@@ -40,6 +40,8 @@ interface Props {
   onCreated: () => void;
   onToast: (kind: ToastKind, msg: string, sub?: string) => void;
   defaultOpen?: boolean;
+  /** "banner" = full CTA card (default); "button" = bare trigger for a header. */
+  variant?: "banner" | "button";
 }
 
 export function CreateBasket({
@@ -47,6 +49,7 @@ export function CreateBasket({
   onCreated,
   onToast,
   defaultOpen = false,
+  variant = "banner",
 }: Props) {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
@@ -195,15 +198,21 @@ export function CreateBasket({
 
   return (
     <>
-      <div className="create-cta">
-        <div className="create-cta-text">
-          <div className="create-cta-title">Launch your own index fund</div>
-          <div className="create-cta-sub">Pick 2–4 assets, set target weights, ship it on-chain.</div>
+      {variant === "banner" ? (
+        <div className="create-cta">
+          <div className="create-cta-text">
+            <div className="create-cta-title">Launch your own index fund</div>
+            <div className="create-cta-sub">Pick 2–4 assets, set target weights, ship it on-chain.</div>
+          </div>
+          <button className="create-trigger" onClick={() => setOpen(true)}>
+            <IconPlus width={16} height={16} /> Create fund
+          </button>
         </div>
+      ) : (
         <button className="create-trigger" onClick={() => setOpen(true)}>
           <IconPlus width={16} height={16} /> Create fund
         </button>
-      </div>
+      )}
 
       <Modal open={open} onClose={() => setOpen(false)}>
         <div className="create-modal">

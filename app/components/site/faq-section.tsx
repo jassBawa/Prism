@@ -10,7 +10,7 @@ export function FaqSection() {
   const [openId, setOpenId] = useState<string>(FAQ[0].id);
 
   return (
-    <section id="faq" className="bg-section-muted py-28 md:py-36">
+    <section id="faq" className="bg-section-light py-28 md:py-36">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-[0.85fr_1.15fr] md:gap-20">
           <Reveal>

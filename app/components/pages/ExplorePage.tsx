@@ -13,42 +13,49 @@ export function ExplorePage() {
   const router = useRouter();
   const open = (pk: string) => router.push(`/fund/${pk}`);
   return (
-    <div className="layout">
-      <div className="layout-main">
+    <div>
+      {/* Full-width header on top, with the create-fund action */}
       <div className="page-head">
         <div>
           <span className="page-kicker">Explore</span>
           <h1>Every fund, on one chain of glass</h1>
-          <p>Browse on-chain index funds, see what each one holds, and deposit a single token for instant diversified exposure. No bridges, no swaps to hold.</p>
+          <p>
+            Browse on-chain index funds, see what each one holds, and deposit a single token for
+            instant diversified exposure. No bridges, no swaps to hold.
+          </p>
+        </div>
+        <div className="page-actions">
+          <CreateBasket
+            baskets={p.lives.map((l) => l.view)}
+            onCreated={p.refresh}
+            onToast={p.pushToast}
+            variant="button"
+          />
         </div>
       </div>
 
-      <HowItWorks />
+      {/* Main content + tokens/trending rail on the right */}
+      <div className="layout">
+        <div className="layout-main">
+          <HowItWorks />
 
-      <section className="section">
-        <div className="section-head">
-          <div className="section-title">
-            All funds <span className="count">{p.lives.length}</span>
-          </div>
-          {p.updatedAt > 0 && (
-            <span className="updated">
-              <IconRefresh width={13} height={13} /> Updated {timeAgo(p.updatedAt)}
-            </span>
-          )}
+          <section className="section">
+            <div className="section-head">
+              <div className="section-title">
+                All funds <span className="count">{p.lives.length}</span>
+              </div>
+              {p.updatedAt > 0 && (
+                <span className="updated">
+                  <IconRefresh width={13} height={13} /> Updated {timeAgo(p.updatedAt)}
+                </span>
+              )}
+            </div>
+            <BasketGrid lives={p.lives} selected={p.selected} loading={p.loading} onSelect={open} />
+          </section>
         </div>
-        <BasketGrid lives={p.lives} selected={p.selected} loading={p.loading} onSelect={open} />
-      </section>
 
-      <section className="section">
-        <CreateBasket
-          baskets={p.lives.map((l) => l.view)}
-          onCreated={p.refresh}
-          onToast={p.pushToast}
-        />
-      </section>
-
+        <RightRail />
       </div>
-      <RightRail />
     </div>
   );
 }

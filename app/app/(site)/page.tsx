@@ -1,14 +1,19 @@
 import { FaqSection } from "@/components/site/faq-section";
 import { Footer } from "@/components/site/footer";
-import { Hero } from "@/components/site/hero";
+// Old hero kept at @/components/site/hero — swap back here if needed.
+import { HeroOrbit } from "@/components/site/hero-orbit";
 import { HowItWorks } from "@/components/site/how-it-works";
+import { WhoItsFor } from "@/components/site/who-its-for";
+import { WhatsInside } from "@/components/site/whats-inside";
 
 export default function Page() {
   return (
     <>
-      <Hero />
+      <HeroOrbit />
       <main>
+        <WhatsInside />
         <HowItWorks />
+        <WhoItsFor />
         <FaqSection />
       </main>
       <Footer />

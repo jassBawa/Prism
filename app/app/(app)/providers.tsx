@@ -2,6 +2,7 @@
 import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { useEffect, useMemo, type ReactNode } from "react";
+import { MotionConfig } from "motion/react";
 import { getEndpoint } from "@/lib/connection";
 import { applyTheme } from "@/lib/theme";
 import { PrismProvider } from "@/components/PrismProvider";
@@ -17,14 +18,16 @@ export function Providers({ children }: { children: ReactNode }) {
   // Re-assert the persisted theme after hydration (covers any attribute reset).
   useEffect(() => applyTheme(), []);
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          <PrismProvider>
-            <AppShell>{children}</AppShell>
-          </PrismProvider>
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <MotionConfig reducedMotion="user" transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <PrismProvider>
+              <AppShell>{children}</AppShell>
+            </PrismProvider>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </MotionConfig>
   );
 }

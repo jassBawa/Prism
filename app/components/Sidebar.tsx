@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useNetworkLabel } from "@/lib/connection";
 import { SettingsMenu } from "./SettingsMenu";
+import { ThemeToggle } from "./ThemeToggle";
 import { IconHome, IconCompass } from "@/components/ui/icons";
 
 const NAV = [
@@ -20,10 +21,10 @@ export function Sidebar() {
     <aside className="sidebar">
       <Link href="/app" className="side-brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="brand-img" src="/brand/prism-icon.svg" alt="Prism" width={36} height={36} />
-        <div>
+        <img className="brand-img" src="/logo.png" alt="Prism" width={36} height={36} />
+        <div className="brand-copy">
           <div className="brand-name">Prism</div>
-          <div className="brand-tag">index funds</div>
+          <div className="brand-tag">Index funds on Solana</div>
         </div>
       </Link>
 
@@ -47,6 +48,7 @@ export function Sidebar() {
         </span>
         <WalletMultiButton />
         <div className="side-actions">
+          <ThemeToggle />
           <SettingsMenu />
         </div>
       </div>

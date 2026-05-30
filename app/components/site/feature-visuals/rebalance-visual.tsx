@@ -1,3 +1,5 @@
+import { TOKEN_ICON } from "@/lib/site/tokens";
+
 export function RebalanceVisual() {
   return (
     <div className="feature-card flex h-full min-h-[280px] flex-col p-6 sm:p-7">
@@ -51,19 +53,17 @@ export function RebalanceVisual() {
         </svg>
 
         <div className="absolute left-0 top-4 flex flex-col gap-2 rounded-xl border border-slate-100 bg-white p-2 shadow-sm">
-          {["SOL", "JUP", "USDC"].map((asset, i) => (
-            <div
+          {["SOL", "JUP", "USDC"].map((asset) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               key={asset}
-              className={`flex h-7 w-7 items-center justify-center rounded-lg text-[8px] font-bold text-white ${
-                i === 0
-                  ? "bg-gradient-to-br from-[#9945FF] to-[#14F195]"
-                  : i === 1
-                    ? "bg-sky-500"
-                    : "bg-blue-600"
-              }`}
-            >
-              {asset.slice(0, 3)}
-            </div>
+              src={TOKEN_ICON[asset]}
+              alt={asset}
+              width={28}
+              height={28}
+              className="size-7 rounded-lg bg-white object-contain ring-1 ring-slate-900/5"
+              loading="lazy"
+            />
           ))}
         </div>
       </div>

@@ -1,25 +1,33 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
 /* ===========================================================================
    Prism dashboard design system
-   Focused, modern dark UI. Plain CSS for zero build friction.
+   Legacy layout uses plain CSS; newer UI uses Tailwind utilities in components.
    =========================================================================== */
 
 :root {
-  /* surfaces — clean high-contrast slate, flat solid */
-  --bg-0: #0d1016;
-  --bg-1: #11151d;
-  --panel: #161b26;
-  --panel-2: #1d2330;
-  --panel-3: #11151e;
-  --panel-sunk: #131822;
-  --track: #222a38;
-  --line: rgba(255, 255, 255, 0.09);
-  --line-strong: rgba(255, 255, 255, 0.17);
+  /* surfaces — neutral, no blue tint; chrome darkest, main mid, cards elevated */
+  --bg-0: #161616;
+  --bg-1: #1c1c1c;
+  --panel: #212121;
+  --panel-2: #2a2a2a;
+  --panel-3: #1a1a1a;
+  --panel-sunk: #121212;
+  --track: #2f2f2f;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --main: #161616;
+  --chrome: #0b0b0b;
 
-  /* text — bright, readable */
-  --text: #f0f3f8;
-  --text-dim: #aab3c5;
-  --muted: #79859b;
-  --faint: #5a6478;
+  /* text — neutral */
+  --text: #fafafa;
+  --text-dim: #a6a6a6;
+  --muted: #808080;
+  --faint: #545454;
 
   /* brand + semantic — electric blue */
   --accent: #3b82f6;
@@ -55,11 +63,40 @@
   --r-md: 14px;
   --r-lg: 18px;
   --r-pill: 999px;
-  --radius: 14px;
+  --radius: 0.625rem;
   --radius-sm: 10px;
 
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 /* ---- light theme ---- */
@@ -71,8 +108,10 @@
   --panel-3: #eef1f5;
   --panel-sunk: #f6f7f9;
   --track: #e6e9f0;
-  --line: rgba(15, 22, 36, 0.1);
+  --line: rgba(15, 22, 36, 0.12);
   --line-strong: rgba(15, 22, 36, 0.2);
+  --main: #ffffff;
+  --chrome: #f4f5f8;
 
   --text: #0f1622;
   --text-dim: #44506a;
@@ -97,13 +136,25 @@
   --shadow-row: 0 1px 2px rgba(15, 22, 36, 0.06);
 }
 /* light-theme: flip the dark-only white-alpha hovers to ink-alpha */
-:root[data-theme="light"] .btn:hover:not(:disabled),
-:root[data-theme="light"] .side-action:hover,
-:root[data-theme="light"] .snav:hover {
+:root[data-theme="light"] .btn:hover:not(:disabled):not(.act):not(.settings-save),
+:root[data-theme="light"] .side-action:hover {
   background: rgba(15, 22, 36, 0.05);
 }
 :root[data-theme="light"] .coin {
   border-color: var(--panel);
+}
+/* shell two-tone (main vs chrome) is driven by --main/--chrome tokens + base rules */
+
+/* light: simple neutral border on the cards (no shadow) */
+:root[data-theme="light"] .stat,
+:root[data-theme="light"] .rcard,
+:root[data-theme="light"] .frow {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  box-shadow: none;
+}
+/* a touch more definition for white-on-white cards */
+:root[data-theme="light"] {
+  --line: rgba(15, 22, 36, 0.12);
 }
 
 * {
@@ -214,7 +265,7 @@ a {
 .brand-mark {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
+  border-radius: var(--r-sm);
   display: grid;
   place-items: center;
   background: var(--spectrum);
@@ -229,25 +280,35 @@ a {
 .brand-img {
   width: 36px;
   height: 36px;
-  border-radius: 11px;
+  border-radius: var(--r-sm);
   flex: none;
   display: block;
+  object-fit: contain;
+}
+/* dark mark on dark chrome → invert so the logo reads */
+:root[data-theme="dark"] .brand-img {
+  filter: invert(1) brightness(1.7);
 }
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.brand-copy {
+  min-width: 0;
 }
 
 .brand-tag {
-  margin-top: 2px;
-  font-size: 11px;
+  margin-top: 3px;
+  font-size: 12px;
   color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 .topbar-right {
@@ -266,9 +327,12 @@ a {
   font-weight: 500;
   color: var(--text-dim);
   padding: 5px 11px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 80%, transparent);
   border-radius: 999px;
-  background: var(--bg-1);
+  background: color-mix(in srgb, var(--panel-2) 68%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   white-space: nowrap;
 }
 
@@ -403,7 +467,7 @@ a {
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   padding: 24px;
   box-shadow: var(--shadow-md);
 }
@@ -439,7 +503,7 @@ a {
   display: flex;
   align-items: center;
   gap: 7px;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   letter-spacing: 0.08em;
   font-weight: 600;
 }
@@ -473,7 +537,7 @@ a {
   text-align: left;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   padding: 18px;
   cursor: pointer;
   color: var(--text);
@@ -741,7 +805,7 @@ a {
 
 .bar {
   height: 28px;
-  border-radius: 11px;
+  border-radius: var(--r-sm);
   background: var(--bg-1);
   overflow: hidden;
   position: relative;
@@ -751,7 +815,7 @@ a {
 .bar > span {
   display: block;
   height: 100%;
-  border-radius: 11px;
+  border-radius: var(--r-sm);
   transition: width 0.6s var(--ease);
 }
 
@@ -818,7 +882,7 @@ a {
 .trade-card {
   background: var(--panel-3);
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: var(--r-md);
   padding: 18px;
 }
 
@@ -869,7 +933,7 @@ a {
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   cursor: pointer;
 }
 
@@ -901,7 +965,25 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-/* buttons */
+/* buttons — solid primaries vs glass secondaries */
+.btn-glass {
+  background: color-mix(in srgb, var(--panel-2) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 85%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="light"] .btn-glass {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(15, 22, 36, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(15, 22, 36, 0.06);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -910,7 +992,7 @@ textarea:focus {
   border: 1px solid var(--line);
   background: var(--bg-1);
   color: var(--text);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   padding: 10px 16px;
   font-weight: 600;
   font-size: 13.5px;
@@ -918,8 +1000,36 @@ textarea:focus {
   transition: transform 0.16s var(--ease), background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
 }
 
-.btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
+/* secondary controls — frosted, not flat fills */
+.btn:not(.act):not(.settings-save),
+.tm-refresh,
+.preset,
+.normalize {
+  background: color-mix(in srgb, var(--panel-2) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 85%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="light"] .btn:not(.act):not(.settings-save),
+:root[data-theme="light"] .tm-refresh,
+:root[data-theme="light"] .preset,
+:root[data-theme="light"] .normalize {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(15, 22, 36, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(15, 22, 36, 0.06);
+}
+
+.btn:hover:not(:disabled):not(.act):not(.settings-save),
+.tm-refresh:hover,
+.preset:hover,
+.normalize:hover {
+  background: color-mix(in srgb, var(--panel-2) 88%, rgba(255, 255, 255, 0.08));
   border-color: var(--line-strong);
 }
 
@@ -1097,7 +1207,7 @@ button.act:disabled {
 
 /* ---- skeletons ---------------------------------------------------------- */
 .skel {
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 70%);
   background-size: 200% 100%;
   animation: shimmer 1.3s linear infinite;
@@ -1161,7 +1271,7 @@ button.act:disabled {
   gap: 11px;
   background: var(--panel-2);
   border: 1px solid var(--line-strong);
-  border-radius: 13px;
+  border-radius: var(--r-md);
   padding: 13px 15px;
   box-shadow: var(--shadow-lg);
   animation: toast-in 0.35s var(--ease);
@@ -1203,8 +1313,10 @@ button.act:disabled {
 
 /* ---- wallet adapter button polish -------------------------------------- */
 .wallet-adapter-button-trigger {
-  background: var(--panel-2) !important;
-  border: 1px solid var(--line-strong) !important;
+  background: color-mix(in srgb, var(--panel-2) 72%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 85%, transparent) !important;
   border-radius: var(--r-sm) !important;
   height: 40px !important;
   font-weight: 600 !important;
@@ -1212,12 +1324,14 @@ button.act:disabled {
   font-family: var(--font-sans) !important;
   color: var(--text) !important;
   padding: 0 14px !important;
-  box-shadow: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.18) !important;
   transition: background 0.16s var(--ease-out), border-color 0.16s var(--ease-out) !important;
 }
 
 .wallet-adapter-button-trigger:hover {
-  background: var(--bg-1) !important;
+  background: color-mix(in srgb, var(--panel-2) 88%, rgba(255, 255, 255, 0.08)) !important;
   border-color: var(--accent) !important;
 }
 
@@ -1296,8 +1410,10 @@ button.act:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 18px;
+  height: 18px;
   padding: 0;
-  margin-left: 5px;
+  margin-left: 4px;
   border: 0;
   background: none;
   color: var(--faint);
@@ -1323,7 +1439,7 @@ button.act:disabled {
   gap: 5px;
   background: var(--panel-2);
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   box-shadow: var(--shadow-md);
   animation: infoIn 0.14s var(--ease);
   cursor: default;
@@ -1376,7 +1492,7 @@ button.act:disabled {
   padding: 18px 20px;
   margin-bottom: 18px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--r-md);
   background: linear-gradient(135deg, rgba(142, 162, 255, 0.07), rgba(103, 232, 249, 0.04));
   overflow: hidden;
 }
@@ -1400,7 +1516,7 @@ button.act:disabled {
   cursor: pointer;
   line-height: 0;
   padding: 4px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   transition:
     color 0.15s var(--ease),
     background 0.15s var(--ease);
@@ -1459,7 +1575,7 @@ button.act:disabled {
   margin: 2px 0 12px;
   padding: 11px 13px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   background: var(--panel-3);
   display: flex;
   flex-direction: column;
@@ -1517,7 +1633,7 @@ button.act:disabled {
   cursor: pointer;
   line-height: 0;
   padding: 3px;
-  border-radius: 6px;
+  border-radius: var(--r-xs);
   transition: color 0.15s var(--ease);
 }
 .tx-copy:hover {
@@ -1537,7 +1653,7 @@ button.act:disabled {
   gap: 8px;
   padding: 13px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   background: var(--panel-3);
 }
 .meta-label {
@@ -1623,7 +1739,7 @@ button.act:disabled {
   font-size: 12px;
   font-weight: 500;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition:
     background 0.15s var(--ease),
@@ -1772,7 +1888,7 @@ button.act:disabled {
   border: 1px solid var(--line);
   background: var(--bg-1);
   color: var(--muted);
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   padding: 7px;
   cursor: pointer;
   line-height: 0;
@@ -1840,7 +1956,7 @@ button.act:disabled {
   gap: 12px;
   padding: 13px 15px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   background: var(--panel-3);
 }
 .admin-info {
@@ -1878,27 +1994,35 @@ button.act:disabled {
 }
 
 /* Rich basket detail: property chips, stats strip, holdings table */
+/* spec bar: one bordered strip with hairline-divided fields — reads as data, not buttons */
 .detail-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   margin: 2px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--panel);
 }
 .dchip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 11px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--bg-1);
-  font-size: 12.5px;
+  gap: 7px;
+  padding: 11px 16px;
+  border-right: 1px solid var(--line);
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
+  cursor: default;
+}
+.dchip:last-child {
+  border-right: 0;
 }
 .dchip .dk {
   color: var(--muted);
   font-weight: 500;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .detail-top {
@@ -1944,7 +2068,7 @@ button.act:disabled {
 
 .btable {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-md);
   overflow: hidden;
 }
 .btable-head,
@@ -2030,21 +2154,10 @@ button.act:disabled {
 
 .shell-root {
   min-height: 100vh;
+  background: var(--main);
 }
 
-/* price ticker marquee */
-.ticker {
-  position: sticky;
-  top: 0;
-  z-index: 60;
-  height: 38px;
-  overflow: hidden;
-  white-space: nowrap;
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  align-items: center;
-}
+/* price ticker marquee — layout/glass via Tailwind on PriceTicker; animation here */
 .ticker-empty {
   display: block;
 }
@@ -2099,33 +2212,23 @@ button.act:disabled {
   top: 38px;
   align-self: start;
   height: calc(100vh - 38px);
-  border-right: 1px solid var(--line);
   padding: 18px 14px 22px;
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: var(--panel);
+  background: var(--chrome);
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-width: none; /* Firefox */
 }
+/* hide the scrollbar — still scrollable on short viewports */
 .sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  display: none;
 }
-.sidebar::-webkit-scrollbar-thumb {
-  background: var(--line-strong);
-  border-radius: 999px;
-}
-/* faint light seam on the right edge, not a flat border */
+/* tonal step is the divider now — no seam */
 .sidebar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 1px;
-  height: 100%;
-  background: linear-gradient(180deg, transparent, var(--line-strong) 40%, transparent);
+  display: none;
 }
 .side-brand {
   display: flex;
@@ -2137,9 +2240,9 @@ button.act:disabled {
   border-bottom: 1px solid var(--line);
 }
 .side-grouplabel {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--faint);
   padding: 18px 10px 8px;
@@ -2147,7 +2250,7 @@ button.act:disabled {
 .side-nav {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 .snav {
   position: relative;
@@ -2156,27 +2259,43 @@ button.act:disabled {
   gap: 11px;
   padding: 10px 12px;
   border-radius: var(--r-sm);
-  color: var(--muted);
+  color: var(--text-dim);
   text-decoration: none;
-  font-weight: 600;
-  font-size: 13.5px;
-  transition: background 0.15s var(--ease-out), color 0.15s var(--ease-out);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.015em;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s var(--ease-out),
+    color 0.15s var(--ease-out),
+    border-color 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out);
 }
 .snav svg {
-  color: var(--faint);
+  color: var(--muted);
   transition: color 0.15s var(--ease-out);
 }
 .snav:hover {
-  background: var(--bg-1);
+  background: color-mix(in srgb, var(--panel-2) 70%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-color: color-mix(in srgb, var(--line-strong) 70%, transparent);
   color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .snav:hover svg {
   color: var(--text-dim);
 }
 .snav.on {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent-soft) 88%, transparent);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
   color: var(--accent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  font-weight: 600;
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.12);
 }
 .snav.on svg {
   color: var(--accent);
@@ -2221,7 +2340,7 @@ button.act:disabled {
 }
 
 .shell-main {
-  padding: 26px 34px 90px;
+  padding: 32px 44px 96px;
   min-width: 0;
   max-width: 1320px;
   margin: 0 auto;
@@ -2419,7 +2538,7 @@ button.act:disabled {
 .frow:hover {
   border-color: var(--line-strong);
   background: var(--panel-2);
-  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.2);
 }
 .frow:hover::before,
 .frow.on::before {
@@ -2552,6 +2671,11 @@ button.act:disabled {
   flex: none;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
 }
+/* real CoinGecko icon variant */
+.coin-img {
+  object-fit: cover;
+  background: var(--panel-2);
+}
 .sym-stack .coin {
   margin-left: -9px;
 }
@@ -2559,10 +2683,11 @@ button.act:disabled {
   margin-left: 0;
 }
 
-/* prism illustration in empty states */
+/* prism illustration in empty states — size comes from inline style on the SVG */
 .prism-art {
   margin: 4px auto 14px;
   display: block;
+  flex: none;
   filter: drop-shadow(0 6px 18px rgba(59, 130, 246, 0.18));
 }
 
@@ -2726,9 +2851,12 @@ button.act:disabled {
 }
 .fund-title {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
+}
+.fund-title > .sym-stack {
+  margin-top: 1px;
 }
 .fund-titletext {
   min-width: 0;
@@ -2749,6 +2877,7 @@ button.act:disabled {
 }
 .fund-title .drift-wrap {
   margin-left: auto;
+  margin-top: 2px;
 }
 .fund-desc {
   margin: 14px 0 0;
@@ -2760,22 +2889,23 @@ button.act:disabled {
 .fund-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
+  gap: 16px 30px;
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
 .fm {
   display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 12.5px;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
 .fmk {
   color: var(--faint);
-  font-size: 11px;
+  font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -2937,7 +3067,7 @@ button.act:disabled {
   gap: 6px;
   padding: 8px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-dim);
   font-family: inherit;
@@ -3001,8 +3131,7 @@ button.act:disabled {
   font-size: 11px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  border-top: 1px solid var(--line);
+  background: var(--chrome);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -3553,4 +3682,93 @@ button.act:disabled {
 /* deposit modal: zap/manual mode switch */
 .dep-modeswitch {
   margin: 16px 0 6px;
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

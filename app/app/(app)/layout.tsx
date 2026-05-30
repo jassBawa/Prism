@@ -28,8 +28,8 @@ export const metadata = {
   title: "Prism · Index funds on Solana",
   description: "Deposit one token, hold a self-rebalancing index fund on Solana.",
   icons: {
-    icon: "/favicon.svg",
-    apple: "/brand/apple-touch-icon-180.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     title: "Prism · Index funds on Solana",

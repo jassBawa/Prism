@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { usePrism } from "@/components/PrismProvider";
 import { BasketDetail } from "@/components/dashboard/BasketDetail";
 
@@ -29,7 +30,7 @@ export function FundPage() {
           <div className="skel" style={{ height: 320 }} />
         ) : (
           <div className="empty">
-            <div className="emoji">🔍</div>
+            <div className="emoji"><Search size={30} strokeWidth={1.5} /></div>
             <div className="et">Fund not found</div>
             <div className="es">It may not exist on this network.</div>
           </div>

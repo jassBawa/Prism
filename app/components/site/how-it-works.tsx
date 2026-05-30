@@ -6,6 +6,7 @@ import { Reveal } from "@/components/site/reveal";
 import { EASE_OUT, scaleIn, staggerContainer, staggerItem } from "@/lib/site/motion";
 import { BasketVisual } from "@/components/site/feature-visuals/basket-visual";
 import { RebalanceVisual } from "@/components/site/feature-visuals/rebalance-visual";
+import { TOKEN_ICON } from "@/lib/site/tokens";
 
 const VISUALS = {
   basket: BasketVisual,
@@ -24,6 +25,20 @@ export function HowItWorks() {
           <p className="body-copy-dark mx-auto mt-5 max-w-xl text-[1rem]">
             {HOW_IT_WORKS.summary}
           </p>
+          <div className="mt-7 flex items-center justify-center -space-x-2.5">
+            {["SOL", "JUP", "USDC"].map((sym) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={sym}
+                src={TOKEN_ICON[sym]}
+                alt={sym}
+                width={40}
+                height={40}
+                className="size-10 rounded-full bg-white object-contain shadow-sm ring-2 ring-section-light"
+                loading="lazy"
+              />
+            ))}
+          </div>
         </Reveal>
 
         <motion.ol
@@ -49,6 +64,17 @@ export function HowItWorks() {
             </motion.li>
           ))}
         </motion.ol>
+
+        <Reveal className="mx-auto mb-14 max-w-2xl text-center md:mb-16">
+          <p className="eyebrow mb-4 text-text-muted">What you get</p>
+          <h3 className="headline-serif text-3xl text-slate-900 md:text-4xl">
+            One token, fully transparent.
+          </h3>
+          <p className="body-copy-dark mx-auto mt-4 max-w-lg text-[1rem]">
+            Diversified exposure and hands-off rebalancing — every weight and trade verifiable
+            on-chain.
+          </p>
+        </Reveal>
 
         <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 md:gap-8">
           {SHOWCASE.map(({ visual, title, description }, index) => {

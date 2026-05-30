@@ -9,6 +9,35 @@ export const fadeUp = {
   },
 };
 
+/** Fade in with blur + slight upward translate — good for empty states and copy blocks. */
+export const blurFadeUp = {
+  hidden: { opacity: 0, y: 18, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.72, ease: EASE_OUT },
+  },
+};
+
+export const blurStaggerContainer = {
+  hidden: { opacity: 1 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.11, delayChildren: 0.06 },
+  },
+};
+
+export const blurStaggerItem = {
+  hidden: { opacity: 0, y: 16, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.68, ease: EASE_OUT },
+  },
+};
+
 export const fadeIn = {
   hidden: { opacity: 0 },
   visible: {

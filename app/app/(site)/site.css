@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 :root {
   --hero-bg: #06080f;
   --accent-gold: #c8a951;
@@ -335,32 +350,15 @@ body {
   background: rgba(15, 23, 42, 0.03);
 }
 
-.nav-app-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1.125rem;
-  border-radius: 9999px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: #ffffff;
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: transparent;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    opacity 0.2s ease;
+/* Dual-layer hero burst (PythOrbit) */
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.nav-app-link:hover {
-  border-color: rgba(255, 255, 255, 0.38);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-@media (min-width: 1024px) {
-  .nav-app-link {
-    padding: 0.5625rem 1.25rem;
-    font-size: 0.875rem;
+@media (prefers-reduced-motion: reduce) {
+  .orbit-layer {
+    animation: none !important;
   }
 }

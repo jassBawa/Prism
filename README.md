@@ -1,75 +1,94 @@
 # Prism
 
-**Self-rebalancing index funds on Solana.** Deposit one token, hold a whole basket — a keeper keeps it at target weights automatically.
+### One deposit, a whole portfolio — that rebalances itself.
 
-[![Solana](https://img.shields.io/badge/Solana-devnet-9945FF)](https://solana.com)
-[![Anchor](https://img.shields.io/badge/Anchor-0.32-512BD4)](https://www.anchor-lang.com)
-[![Oracle](https://img.shields.io/badge/Oracle-Pyth%20pull-6E56CF)](https://pyth.network)
-[![Status](https://img.shields.io/badge/status-in%20development-f5a623)](#status)
+Prism turns a single deposit into a diversified basket of crypto assets, and keeps that basket balanced for you automatically. Think of it as an **index fund for Solana** — but on-chain, self-custodied, and open to anyone.
 
-> 🚧 **In active development** — devnet only, unaudited, single centralized keeper, mock swaps. Don't use real funds.
+> 🧪 **Live on Solana devnet** — this is a working preview, not real money. Unaudited. Don't deposit funds you can't lose.
 
 ---
 
-## What it is
+## The problem
 
-Pick 2–4 assets and target weights, deposit USDC, and get one **basket token** representing the portfolio. As prices drift the basket goes off target; an off-chain **keeper** rebalances it back using **Pyth** oracle prices. Withdraw anytime for your pro-rata share of every underlying asset.
+Building a diversified crypto position is more work than it should be:
 
-The whole loop — **deposit → auto-rebalance → withdraw** — works end-to-end on devnet, driven from the dashboard with your own wallet.
+- You buy several tokens by hand, on different screens.
+- The moment prices move, your mix drifts away from what you wanted.
+- To fix it you rebalance manually — more trades, more fees, more slippage, more time.
+- And you're constantly watching, because the market never closes.
 
-## Status
+Most people just… don't. They hold one or two tokens and hope.
 
-| | |
-|---|---|
-| ✅ **Shipped** | On-chain program (registry, allowlist, create-basket, deposit, withdraw, rebalance, admin) · Pyth pricing with staleness/confidence guards · user-created 2–4 asset baskets · NAV deposits · in-kind withdrawals · **spread-incentivized permissionless rebalance** (any wallet/arb rebalances for the spread) · **dual drift gate** (absolute + relative) · **creator deposit fee** · multi-basket dashboard · hosted keeper service · negative tests for every guard |
-| 🔨 **In progress** | Real DEX swaps via **Jupiter v6** (replacing devnet `mock_swap`) · slippage caps + circuit breaker · keeper hardening (retries, scheduling) |
-| 🗓️ **Planned** | Keeper **bounty market** · NAV/APR analytics · Dutch-auction rebalancing · fund-as-LP earning fees · mainnet + audit |
+## What Prism does
 
-## Run it
+Prism gives you a **basket**: a set of 2–4 assets with target weights (say 50% SOL, 30% JUP, 20% USDC), wrapped into a **single token** you hold in your own wallet.
 
-The program is deployed + seeded on devnet, so no local infra is needed:
+- **Deposit once.** Put in USDC, get one basket token representing the whole mix.
+- **It stays on target.** When prices drift, an automated keeper trades the basket back to its target weights for you — using live [Pyth](https://pyth.network) oracle prices.
+- **Leave whenever.** Redeem your basket token any time for your exact share of every asset inside. No lock-ups.
+
+One token to hold. No manual rebalancing. No babysitting.
+
+## How it works
+
+| | Step | What happens |
+|---|------|--------------|
+| 1️⃣ | **Deposit** | You send USDC and receive a basket token, priced at the basket's live net asset value (NAV). |
+| 2️⃣ | **Stay balanced** | A keeper watches each asset's drift and rebalances back to target when it moves too far — automatically, around the clock. |
+| 3️⃣ | **Withdraw** | Burn your basket token and get a pro-rata share of every underlying asset back — directly, with no swap and no slippage. |
+
+## Why it's different
+
+- 🧺 **One token = a full portfolio.** Hold, transfer, or integrate it like any SPL token.
+- 🤖 **Rebalancing is automatic.** You set the targets once; the keeper does the work.
+- 🔍 **Honestly priced.** Every deposit and rebalance uses Pyth oracle prices, with staleness and confidence checks so a bad print can't move your money.
+- 🔐 **You stay in control.** Funds live in on-chain vaults owned by the basket itself — not by us. Your exit is always a simple, oracle-free, in-kind withdrawal.
+- 🌐 **Open by design.** Anyone can create a basket. Anyone can trigger a rebalance (and earn a small spread for doing it) — so the fund keeps itself on target even without us.
+
+## What you can do today (devnet)
+
+- Browse baskets and see live weights and NAV.
+- Create your own basket from the supported assets, with custom weights.
+- Deposit test USDC and receive basket tokens.
+- Watch a basket drift and rebalance back to target.
+- Withdraw and get every underlying asset back.
+
+## FAQ
+
+**What is a "basket"?**
+A small portfolio — 2 to 4 assets with target weights — represented by one token you own.
+
+**How is it priced?**
+By [Pyth](https://pyth.network) oracle prices. Basket tokens are minted and redeemed at the live net asset value, with staleness and confidence checks.
+
+**What does the keeper do?**
+It watches how far each asset has drifted from its target and rebalances when the gap is too big — posting fresh prices before each trade.
+
+**How do withdrawals work?**
+You burn your basket token and receive your pro-rata share of *every* asset in the vault — atomic, oracle-free, and without swap slippage.
+
+**Is this on mainnet?**
+Not yet. It runs on Solana devnet today as a working reference; the same design is built to route to real liquidity on mainnet later.
+
+**Is it safe to use with real money?**
+No — it's an unaudited devnet preview. It has guards (Pyth checks, weight validation, bounded spreads), but it hasn't been audited. Use test funds only.
+
+---
+
+## Try it
+
+The app runs against live devnet — no setup needed beyond installing and seeding:
 
 ```sh
-pnpm setup              # install deps (once)
-pnpm seed               # create test mints + demo baskets, fund the admin wallet
-pnpm dev                # dashboard → http://localhost:3001 (live devnet)
+pnpm setup    # install dependencies (once)
+pnpm seed     # create test assets + demo baskets
+pnpm dev      # open the dashboard at http://localhost:3001
 ```
 
-The seeded **admin wallet** holds test USDC; deposit from it via `pnpm deposit <amount>`, or connect any wallet that holds the test USDC mint. Set your wallet to **Devnet**, deposit into a basket, then watch it rebalance. To trigger a rebalance directly:
+Set your wallet to **Devnet**, then deposit into a basket and watch it rebalance.
 
-```sh
-pnpm skew sol 300 <BASKET>   # force drift (mints into the SOL vault)
-pnpm rebalance <BASKET>      # swap back toward target at oracle ± spread
-```
+## Building on Prism?
 
-`rebalance` is **permissionless** — any wallet may call it and keep the spread. Full local-validator setup (surfpool) is in [`docs/DEPLOY.md`](./docs/DEPLOY.md).
+The full picture — the on-chain program, custody model, instructions, CLI, and deployment — lives in the **[Technical Guide →](./docs/TECHNICAL.md)**.
 
-## Program
-
-Anchor (Rust). One program, instructions:
-
-| Instruction | Who | What |
-|-------------|-----|------|
-| `init_registry` / `set_supported_asset` | admin | create the registry · curate the asset allowlist |
-| `create_basket` | anyone | 2–4 allowlisted assets, weights (Σ = 10000 bps), quote asset, thresholds (abs+rel), interval, spread, deposit fee |
-| `deposit` | user | quote asset in → mint basket token by NAV; a `deposit_fee_bps` slice goes to the creator |
-| `withdraw` | user | burn → in-kind pro-rata of every asset (oracle-free, atomic, fee-free) |
-| `rebalance` | **anyone** | dual gate (abs+rel drift) + interval → swap toward target at Pyth price ± `spread`; the caller keeps the spread |
-| `set_params` / `set_paused` | owner | tune thresholds/interval/spread/fee · pause |
-
-Custody is entirely on-chain: a Basket PDA owns every vault + the basket-token mint. A rebalance caller can only swap *within* a vault toward target at oracle±spread — it can't mint or withdraw, and the spread is bounded (≤ 1%). Users always exit via the oracle-free in-kind `withdraw`.
-
-## Layout
-
-```
-programs/mini_symmetry/   Anchor program (Rust)
-sdk/                      TS client — PDAs, accounts, NAV/drift math, Pyth helper
-scripts/                  seed · deposit · withdraw · rebalance · skew · fund · negative
-keeper/ · ops/            auto-rebalance loop · hosted keeper service
-app/                      Next.js dashboard
-docs/                     design + deploy docs
-```
-
-## Stack
-
-Anchor · Pyth (pull oracle) · `@solana/web3.js` + `@coral-xyz/anchor` · Next.js + wallet-adapter · Node/TS keeper.
+<sub>Built on **Solana** · priced by **Pyth** · powered by **Anchor** + **SPL Token**. Program (devnet): [`8TrJeQa…X3jbe`](https://explorer.solana.com/address/8TrJeQaHV4yXgPkNeZXR1pdWbEMXvnpLMYZpk1qX3jbe?cluster=devnet)</sub>

@@ -132,7 +132,7 @@ export function BasketDetail({
           </span>
           <span className="dchip">
             <span className="dk">Guards</span>
-            Pyth ≤60s · ≤2% <Info k="pyth" />
+            Pyth ≤60s · ≤2% <Info k="pyth" align="right" />
           </span>
         </div>
 

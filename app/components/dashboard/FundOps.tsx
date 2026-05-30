@@ -45,7 +45,7 @@ export function FundOps({ live, me, adminBusy, onRebalance, onTogglePause }: Pro
           b.paused
             ? "Fund is paused"
             : drifting
-              ? "Trade the fund back to target and claim the spread reward"
+              ? "Swap the fund back to target on Raydium"
               : "On target — nothing to rebalance"
         }
       >
@@ -54,16 +54,15 @@ export function FundOps({ live, me, adminBusy, onRebalance, onTogglePause }: Pro
             <span className="spinner" /> Rebalancing…
           </>
         ) : drifting ? (
-          "Rebalance & claim reward"
+          "Rebalance fund"
         ) : (
           "On target"
         )}
       </button>
 
       <p className="ops-note">
-        Permissionless: you act as the keeper — supply the under-weight token, receive the
-        over-weight one plus the {pct(b.spreadBps)} spread as your reward. Two wallet approvals
-        (post Pyth prices, then rebalance).
+        Permissionless: anyone can trigger it. The fund swaps itself back to target on Raydium
+        (oracle-bounded) — you just pay gas + approve 2 transactions (post Pyth prices, then swap).
         {owner ? " As the creator, you can also pause deposits." : ""}
       </p>
 

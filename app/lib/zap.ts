@@ -2,12 +2,21 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import poolsJson from "./pools.json";
 
-interface PoolEntry {
+export interface PoolEntry {
   poolId: string;
   token0Mint: string;
   token1Mint: string;
+  vault0: string;
+  vault1: string;
+  observation: string;
+  authority: string;
+  configId: string;
 }
-const POOLS = (poolsJson as { pools: Record<string, PoolEntry> }).pools;
+const CFG = poolsJson as { cpmmProgram: string; pools: Record<string, PoolEntry> };
+const POOLS = CFG.pools;
+
+/** The Raydium CPMM program these pools live under. */
+export const CPMM_PROGRAM = CFG.cpmmProgram;
 
 /** Find the CPMM pool for a (mintA, mintB) pair, either token order. */
 export function poolForPair(mintA: string, mintB: string): PoolEntry | null {

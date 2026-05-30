@@ -15,9 +15,9 @@ import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } f
 import { RPC_URL } from "@/lib/constants";
 import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type BasketView } from "@/lib/program";
 import { computeState } from "@/lib/math";
-import { depositAssetsRemaining, depositRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
+import { depositAssetsRemaining, depositRemaining, rebalanceOneRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
-import { fetchSwapIxs, poolForPair } from "@/lib/zap";
+import { CPMM_PROGRAM, fetchSwapIxs, poolForPair } from "@/lib/zap";
 import type { Live, Toast, ToastKind } from "@/lib/types";
 import type { TxResult } from "./dashboard/TradePanel";
 
@@ -358,20 +358,59 @@ export function PrismProvider({ children }: { children: ReactNode }) {
 
   const rebalance = async (b: BasketView) => {
     if (!wallet) return;
+    const me = wallet.publicKey;
+    const live = lives.find((l) => l.view.pubkey.equals(b.pubkey));
+    const quote = b.assets[b.quoteIndex]!;
+    // Real path: every non-quote asset has a Raydium pool with the quote → swap on the AMM.
+    const nonQuote = b.assets.map((a, i) => ({ a, i })).filter((x) => x.i !== b.quoteIndex);
+    const realPools = nonQuote.map((x) => poolForPair(quote.mint.toBase58(), x.a.mint.toBase58()));
+    const useReal = !!live && realPools.every(Boolean);
+
     setAdminBusy(b.pubkey.toBase58());
-    pushToast("info", "Rebalancing…", "you'll approve 2 transactions: post prices, then rebalance");
     try {
       const program = getProgram(wallet, connection);
-      const me = wallet.publicKey;
-      const feeds = b.assets.map((a) => a.feedHex);
-      const sigs = await sendWithPyth(connection, wallet, feeds, async (priceFor) => [
-        await program.methods
-          .rebalance()
-          .accountsPartial({ basket: b.pubkey, keeper: me, tokenProgram: TOKEN_PROGRAM_ID })
-          .remainingAccounts(rebalanceRemaining(b.pubkey, me, b.assets, priceFor))
-          .instruction(),
-      ], stepToast("rebalancing the fund"));
-      pushToast("ok", "Rebalanced", sigs[sigs.length - 1]?.slice(0, 24) + "…");
+      if (useReal) {
+        let did = 0;
+        for (let k = 0; k < nonQuote.length; k++) {
+          const { a, i } = nonQuote[k]!;
+          const pool = realPools[k]!;
+          const vi = live!.valuesUsd[i] ?? 0;
+          const vq = live!.valuesUsd[b.quoteIndex] ?? 0;
+          if (vq <= 0) continue;
+          const lhs = vi * quote.targetWeightBps;
+          const rhs = a.targetWeightBps * vq;
+          const denom = Math.max(lhs, rhs);
+          const driftBps = denom > 0 ? (Math.abs(lhs - rhs) / denom) * 10000 : 0;
+          if (driftBps < b.thresholdBps) continue; // this asset is on target
+          const buy = rhs > lhs; // asset under-weight vs quote → buy it
+          pushToast("info", `Rebalancing ${a.symbol} on Raydium…`, "approve 2 transactions");
+          await sendWithPyth(
+            connection,
+            wallet,
+            [a.feedHex, quote.feedHex],
+            async (priceFor) => [
+              await program.methods
+                .rebalanceOne(i)
+                .accountsPartial({ basket: b.pubkey, keeper: me })
+                .remainingAccounts(rebalanceOneRemaining(b.pubkey, a, quote, pool, buy, priceFor, new PublicKey(CPMM_PROGRAM)))
+                .instruction(),
+            ],
+            stepToast(`swapping ${a.symbol} on Raydium`),
+          );
+          did++;
+        }
+        pushToast(did > 0 ? "ok" : "info", did > 0 ? "Rebalanced on Raydium" : "Already on target", "");
+      } else {
+        const feeds = b.assets.map((a) => a.feedHex);
+        const sigs = await sendWithPyth(connection, wallet, feeds, async (priceFor) => [
+          await program.methods
+            .rebalance()
+            .accountsPartial({ basket: b.pubkey, keeper: me, tokenProgram: TOKEN_PROGRAM_ID })
+            .remainingAccounts(rebalanceRemaining(b.pubkey, me, b.assets, priceFor))
+            .instruction(),
+        ], stepToast("rebalancing the fund"));
+        pushToast("ok", "Rebalanced", sigs[sigs.length - 1]?.slice(0, 24) + "…");
+      }
       await refresh();
     } catch (e) {
       pushToast("err", "Rebalance failed", (e as Error).message);

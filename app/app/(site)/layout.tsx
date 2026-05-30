@@ -8,6 +8,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 const newsreader = Newsreader({
@@ -15,6 +16,10 @@ const newsreader = Newsreader({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
+  display: "swap",
+  // Next 14 has no fallback metrics for Newsreader → skip the auto size-adjust
+  // (silences "Failed to find font override values").
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {

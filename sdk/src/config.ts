@@ -83,6 +83,10 @@ export interface PoolsConfig {
 }
 
 export function loadPoolsConfig(): PoolsConfig {
+  // POOLS_JSON (inline config) overrides the file — lets the hosted keeper get pools
+  // without shipping .keys/ (excluded from the image), same as RPC_URL/ADMIN_SECRET_KEY.
+  const env = process.env.POOLS_JSON?.trim();
+  if (env) return JSON.parse(env) as PoolsConfig;
   if (!existsSync(POOLS_PATH)) {
     return { cpmmProgram: "", cpmmFeeAcc: "", ammConfig: "", pools: {} };
   }

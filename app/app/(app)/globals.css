@@ -2007,12 +2007,16 @@ button.act:disabled {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  flex: 1 1 auto;
   padding: 11px 16px;
   border-right: 1px solid var(--line);
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
   cursor: default;
+}
+.dchip:last-child {
+  border-right: none;
 }
 .dchip:last-child {
   border-right: 0;
@@ -2027,10 +2031,10 @@ button.act:disabled {
 
 .detail-top {
   display: flex;
-  gap: 28px;
-  align-items: center;
+  gap: 32px;
+  align-items: flex-start;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 .detail-top .ring-wrap {
   margin: 0;
@@ -2039,11 +2043,11 @@ button.act:disabled {
   --size: 150px;
 }
 .detail-stats {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  gap: 16px 26px;
-  min-width: 200px;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 20px 64px;
+  align-self: flex-start;
+  padding-top: 4px;
 }
 .dstat {
   display: flex;
@@ -2053,6 +2057,7 @@ button.act:disabled {
 .dlabel {
   display: flex;
   align-items: center;
+  gap: 5px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -3345,6 +3350,107 @@ button.act:disabled {
 .ops-pause {
   width: 100%;
   margin-top: 10px;
+}
+/* stack the status rows with breathing room (avoid touching double-borders) */
+.ops-stat + .ops-stat {
+  margin-top: 8px;
+}
+.ops-manual {
+  width: 100%;
+  margin-top: 12px;
+}
+.ops-subnote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* fund performance (NAV history) card */
+.perf-card {
+  margin: 18px 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 16px;
+}
+.perf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.perf-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.perf-sub {
+  margin-left: 6px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.perf-now {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.perf-delta {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.perf-delta.up {
+  color: var(--ok, #46a758);
+}
+.perf-delta.down {
+  color: var(--bad, #e5484d);
+}
+.nav-chart {
+  position: relative;
+  width: 100%;
+  margin-top: 4px;
+  cursor: crosshair;
+}
+.nav-chart svg {
+  display: block;
+}
+.nav-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.nav-tip {
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+.nav-tip-v {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.nav-tip-t {
+  font-size: 10.5px;
+  color: var(--muted);
 }
 
 /* create modal: social links */

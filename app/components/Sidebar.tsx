@@ -5,11 +5,12 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useNetworkLabel } from "@/lib/connection";
 import { SettingsMenu } from "./SettingsMenu";
 import { ThemeToggle } from "./ThemeToggle";
-import { IconHome, IconCompass } from "@/components/ui/icons";
+import { IconHome, IconCompass, IconCoins } from "@/components/ui/icons";
 
 const NAV = [
   { href: "/app", label: "Home", icon: IconHome, exact: true },
   { href: "/explore", label: "Explore", icon: IconCompass, exact: false },
+  { href: "/faucet", label: "Faucet", icon: IconCoins, exact: false },
 ];
 
 export function Sidebar() {

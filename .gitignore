@@ -10,3 +10,5 @@ runbooks
 txtx.yml
 .keys
 .env
+.claude
+AWSCLIV2.pkg

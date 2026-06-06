@@ -58,13 +58,6 @@ export function Nav({ variant = "dark" }: { variant?: "dark" | "light" }) {
               <span className="font-serif text-[1.0625rem] leading-none tracking-[-0.03em] lg:text-[1.125rem]">
                 Prism
               </span>
-              <span
-                className={`text-[0.6875rem] font-medium leading-none tracking-[-0.01em] ${
-                  light ? "text-slate-500" : "text-white/55"
-                }`}
-              >
-                On-chain index funds
-              </span>
             </span>
           </Link>
 

@@ -3,10 +3,11 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "motion/react";
-import { ArrowUpRight } from "lucide-react";
-import { APP_URL, DOCS_URL } from "@/lib/site/config";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { APP_URL, HERO } from "@/lib/site/config";
 import { staggerContainer, staggerItem } from "@/lib/site/motion";
 import { Nav } from "@/components/site/nav";
+import { HeroCoins } from "@/components/site/hero-coins";
 import Prism from "@/components/Prism";
 
 export function HeroOrbit() {
@@ -56,9 +57,17 @@ export function HeroOrbit() {
         aria-hidden="true"
       />
 
+      {/* fade the dark hero into the light section below it */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-48 bg-gradient-to-b from-transparent to-[#f7f7f5]"
+      />
+
+      <HeroCoins />
+
       <Nav />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
+      <div className="pointer-events-none relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
         <motion.div
           className="flex flex-col items-center"
           variants={staggerContainer}
@@ -87,13 +96,12 @@ export function HeroOrbit() {
             variants={staggerItem}
             className="mt-7 max-w-xl text-[1.125rem] leading-relaxed tracking-[-0.01em] text-white/70"
           >
-            Diversified SOL, JUP, and USDC exposure in a single token — priced
-            by Pyth and kept on target automatically.
+            {HERO.subcopy}
           </motion.p>
 
           <motion.div
             variants={staggerItem}
-            className="mt-10 flex flex-wrap items-center justify-center gap-3"
+            className="pointer-events-auto mt-10 flex flex-wrap items-center justify-center gap-3"
           >
             <Link
               href={APP_URL}
@@ -104,26 +112,23 @@ export function HeroOrbit() {
               <ArrowUpRight className="size-[18px] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
             <Link
-              href={DOCS_URL}
+              href="#how-it-works"
               className="inline-flex items-center rounded-full border border-white/20 bg-white/[0.06] px-8 py-4 text-[0.95rem] font-medium tracking-[-0.015em] text-white/90 backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10"
             >
-              Learn more
+              How it works
             </Link>
-          </motion.div>
-
-          <motion.div
-            variants={staggerItem}
-            className="mt-9 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[0.8125rem] text-white/45"
-          >
-            <span>Priced by Pyth</span>
-            <span className="size-1 rounded-full bg-white/25" aria-hidden />
-            <span>Auto-rebalanced</span>
-            <span className="size-1 rounded-full bg-white/25" aria-hidden />
-            <span>Withdraw anytime, in-kind</span>
           </motion.div>
         </motion.div>
       </div>
-    </section>
 
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-slate-400"
+        animate={{ y: [0, 6, 0] }}
+        transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+      >
+        <ChevronDown className="size-5" />
+      </motion.div>
+    </section>
   );
 }

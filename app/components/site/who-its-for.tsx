@@ -150,14 +150,14 @@ export function WhoItsFor() {
   }, []);
 
   return (
-    <section id="who" className="bg-section-muted py-28 md:py-36">
+    <section id="who" className="bg-section-muted py-20 md:py-24">
       <div className="container mx-auto px-6 lg:px-12">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 md:gap-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14">
           {/* Left: physics pit */}
           <Reveal>
             <div
               ref={sceneRef}
-              className={`relative aspect-[5/6] w-full select-none overflow-hidden rounded-3xl border border-slate-900/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_24px_50px_-28px_rgba(15,23,42,0.25)] ${
+              className={`relative aspect-square w-full select-none overflow-hidden rounded-3xl border border-slate-900/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_24px_50px_-28px_rgba(15,23,42,0.25)] ${
                 physics ? "" : "flex flex-wrap content-center items-center justify-center gap-3 p-8"
               }`}
               style={{
@@ -193,11 +193,11 @@ export function WhoItsFor() {
               <p className="mt-5 text-[0.9375rem] leading-relaxed tracking-[-0.01em] text-slate-600">
                 Automate rebalancing with{" "}
                 <strong className="font-semibold text-slate-900">keepers</strong> and{" "}
-                <strong className="font-semibold text-slate-900">Pyth-priced NAV</strong> — then{" "}
+                <strong className="font-semibold text-slate-900">Pyth-priced NAV</strong> then{" "}
                 <strong className="font-semibold text-slate-900">redeem in-kind</strong>, any time.
               </p>
 
-              <div className="mt-7 divide-y divide-slate-200/80 border-t border-slate-200/80">
+              <div className="mt-6 divide-y divide-slate-200/80 border-t border-slate-200/80">
                 {AUDIENCES.map((a) => {
                   const isOpen = openId === a.id;
                   return (
@@ -205,7 +205,7 @@ export function WhoItsFor() {
                       <button
                         type="button"
                         onClick={() => setOpenId(isOpen ? "" : a.id)}
-                        className="group flex w-full items-center justify-between gap-6 py-5 text-left"
+                        className="group flex w-full items-center justify-between gap-6 py-4 text-left"
                         aria-expanded={isOpen}
                       >
                         <span

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { APP_URL, DOCS_URL, EXPLORER_URL } from "@/lib/site/config";
-import { PartnerMarquee } from "@/components/site/partner-marquee";
+import { APP_URL, DOCS_URL, EXPLORER_URL, HAS_DOCS } from "@/lib/site/config";
 
 type FooterLink = { label: string; href: string; external?: boolean };
 
@@ -11,13 +10,14 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       { label: "Open app", href: APP_URL },
       { label: "What's inside", href: "#inside" },
       { label: "How it works", href: "#how-it-works" },
+      { label: "Roadmap", href: "#roadmap" },
       { label: "FAQ", href: "#faq" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Docs", href: DOCS_URL },
+      ...(HAS_DOCS ? [{ label: "Docs", href: DOCS_URL } as FooterLink] : []),
       { label: "Program", href: EXPLORER_URL, external: true },
     ],
   },
@@ -63,9 +63,9 @@ export function Footer() {
     <footer className="bg-hero-bg text-white">
       <div className="container mx-auto px-6 lg:px-12">
         {/* Partners strip */}
-        <div className="border-b border-white/10 py-12">
+        {/* <div className="border-b border-white/10 py-12">
           <PartnerMarquee />
-        </div>
+        </div> */}
 
         {/* Sitemap */}
         <div className="grid gap-10 py-14 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:gap-8">
@@ -82,7 +82,7 @@ export function Footer() {
               <span className="font-serif text-lg tracking-[-0.02em]">Prism</span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-white/50">
-              On-chain index funds on Solana. An educational reference build — deposit once,
+              On-chain index funds on Solana. A working devnet reference — deposit once,
               hold a single, balanced basket token.
             </p>
           </div>
@@ -94,7 +94,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 py-6 text-sm text-white/40 sm:flex-row">
-          <span>© Prism · educational reference</span>
+          <span>© Prism · working devnet reference</span>
           <span className="text-white/30">Solana · Devnet</span>
         </div>
       </div>

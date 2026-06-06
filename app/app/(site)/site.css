@@ -362,3 +362,93 @@ body {
     animation: none !important;
   }
 }
+
+/* ── Why Prism / Roadmap accents ─────────────────────────────── */
+
+/* prism spectrum — the brand through-line */
+.spectrum-bar {
+  background: linear-gradient(90deg, #9945ff 0%, #38bdf8 38%, #2563eb 68%, #c8a951 100%);
+}
+
+/* frosted glass card (dark sections) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+  will-change: transform;
+}
+.glass-panel:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* "coming soon" pill */
+.soon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  color: var(--accent-gold);
+  background: rgba(200, 169, 81, 0.1);
+  border: 1px solid rgba(200, 169, 81, 0.28);
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.floaty {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+@keyframes soon-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.soon-glow {
+  animation: soon-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floaty,
+  .soon-glow {
+    animation: none !important;
+  }
+}
+
+/* Floating hero coins — gentle idle bob */
+@keyframes coin-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+.coin-bob {
+  animation: coin-bob 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .coin-bob {
+    animation: none !important;
+  }
+}

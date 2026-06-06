@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { APP_URL, DOCS_URL, FAQ, FAQ_SECTION } from "@/lib/site/config";
+import { APP_URL, DOCS_URL, EXPLORER_URL, FAQ, FAQ_SECTION, HAS_DOCS } from "@/lib/site/config";
 import { Reveal } from "@/components/site/reveal";
 import { EASE_OUT } from "@/lib/site/motion";
 
@@ -27,8 +27,12 @@ export function FaqSection() {
                 <a href={APP_URL} className="faq-cta-primary">
                   Open App
                 </a>
-                <a href={DOCS_URL} className="faq-cta-ghost">
-                  Read docs
+                <a
+                  href={HAS_DOCS ? DOCS_URL : EXPLORER_URL}
+                  className="faq-cta-ghost"
+                  {...(HAS_DOCS ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+                >
+                  {HAS_DOCS ? "Read docs" : "View program"}
                 </a>
               </div>
             </div>

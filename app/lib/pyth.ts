@@ -62,13 +62,14 @@ export async function sendWithPyth(
   });
 
   const built = await builder.buildVersionedTransactions({ computeUnitPriceMicroLamports: 50_000 });
+  // Apply ephemeral signers, then have the wallet sign ALL txs in ONE prompt.
+  for (const { tx, signers } of built) if (signers.length) tx.sign(signers);
+  const signed = await wallet.signAllTransactions(built.map((b) => b.tx));
+  // Send in order — Pyth price posts must land before the consumer ix that reads them.
   const sigs: string[] = [];
-  for (let i = 0; i < built.length; i++) {
-    const { tx, signers } = built[i]!;
-    onStep?.(i + 1, built.length);
-    if (signers.length) tx.sign(signers);
-    const signed = await wallet.signTransaction(tx);
-    const sig = await connection.sendRawTransaction(signed.serialize(), { skipPreflight: true });
+  for (let i = 0; i < signed.length; i++) {
+    onStep?.(i + 1, signed.length);
+    const sig = await connection.sendRawTransaction(signed[i]!.serialize(), { skipPreflight: true });
     await connection.confirmTransaction(sig, "confirmed");
     sigs.push(sig);
   }

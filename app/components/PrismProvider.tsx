@@ -17,7 +17,7 @@ import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type B
 import { computeState } from "@/lib/math";
 import { depositAssetsRemaining, depositRemaining, rebalanceOneRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
-import { CPMM_PROGRAM, fetchSwapIxs, poolForPair } from "@/lib/zap";
+import { CPMM_PROGRAM, poolForPair } from "@/lib/zap";
 import type { Live, Toast, ToastKind } from "@/lib/types";
 import type { TxResult } from "./dashboard/TradePanel";
 
@@ -51,9 +51,8 @@ interface PrismCtx {
   busy: "deposit" | "withdraw" | null;
   adminBusy: string | null;
   lastTx: TxResult | null;
-  deposit: () => Promise<void>;
+  deposit: (uiUsdcAmount: number) => Promise<void>;
   depositAssets: (uiAmounts: number[]) => Promise<void>;
-  depositZap: (uiUsdcAmount: number) => Promise<void>;
   withdraw: () => Promise<void>;
   rebalance: (b: BasketView) => Promise<void>;
   togglePause: (b: BasketView, paused: boolean) => Promise<void>;
@@ -184,8 +183,10 @@ export function PrismProvider({ children }: { children: ReactNode }) {
   const sel = lives.find((l) => l.view.pubkey.toBase58() === selected) ?? null;
   const quoteSym = sel?.view.assets[sel.view.quoteIndex]?.symbol ?? "USDC";
 
-  const deposit = async () => {
-    if (!wallet || !sel) return;
+  // Single-asset (quote/USDC) deposit: mint fund tokens at live NAV; the USDC
+  // stays in the vault and the keeper rebalances it into target weights.
+  const deposit = async (uiUsdcAmount: number) => {
+    if (!wallet || !sel || uiUsdcAmount <= 0) return;
     setBusy("deposit");
     pushToast("info", "Posting prices & depositing…", "approve in your wallet");
     try {
@@ -196,7 +197,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
       const depositorBasket = ownerAta(me, b.basketMint);
       const depositorQuote = ownerAta(me, quote.mint);
       const creatorBasket = ownerAta(b.authority, b.basketMint);
-      const amount = new BN(Math.round(Number(depAmt) * 10 ** quote.decimals));
+      const amount = new BN(Math.round(uiUsdcAmount * 10 ** quote.decimals));
       const feeds = b.assets.map((a) => a.feedHex);
       const sigs = await sendWithPyth(connection, wallet, feeds, async (priceFor) => [
         createAssociatedTokenAccountIdempotentInstruction(me, depositorBasket, me, b.basketMint),
@@ -217,7 +218,7 @@ export function PrismProvider({ children }: { children: ReactNode }) {
       ], stepToast("minting your fund tokens"));
       const sig = sigs[sigs.length - 1];
       if (sig) setLastTx({ action: "deposit", sig });
-      pushToast("ok", `Deposited ${depAmt} ${quoteSym}`, sig?.slice(0, 24) + "…");
+      pushToast("ok", `Deposited ${uiUsdcAmount} ${quoteSym}`, sig?.slice(0, 24) + "…");
       await refresh();
     } catch (e) {
       pushToast("err", "Deposit failed", (e as Error).message);
@@ -267,59 +268,6 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       pushToast("err", "Deposit failed", (e as Error).message);
     } finally {
-      setBusy(null);
-    }
-  };
-
-  // Zap: deposit USDC, swap it into the fund's underlying tokens via Raydium CPMM
-  // (Tx A), then in-kind deposit the swapped tokens + the kept USDC slice (Tx B).
-  const depositZap = async (uiUsdcAmount: number) => {
-    if (!wallet || !sel || uiUsdcAmount <= 0) return;
-    const b = sel.view;
-    const me = wallet.publicKey;
-    const qi = b.quoteIndex;
-    const usdcMint = b.assets[qi]!.mint.toBase58();
-
-    // split by target weight: swap the non-quote slices, keep the quote slice
-    const items: { poolId: string; inputMint: string; amountInRaw: string }[] = [];
-    const swapIdx: number[] = [];
-    b.assets.forEach((a, i) => {
-      if (i === qi) return;
-      const usd = uiUsdcAmount * (a.targetWeightBps / 10000);
-      if (usd <= 0) return;
-      const pool = poolForPair(usdcMint, a.mint.toBase58());
-      if (!pool) throw new Error(`no Raydium pool for ${a.symbol}`);
-      items.push({ poolId: pool.poolId, inputMint: usdcMint, amountInRaw: String(Math.round(usd * 1e6)) });
-      swapIdx.push(i);
-    });
-    if (items.length === 0) {
-      // single-asset (USDC-only) fund — no swap needed, just deposit
-      await depositAssets(b.assets.map((_, i) => (i === qi ? uiUsdcAmount : 0)));
-      return;
-    }
-
-    setBusy("deposit");
-    pushToast("info", "Swapping via Raydium…", "approve the swap in your wallet");
-    try {
-      const before = await Promise.all(b.assets.map((a) => tokenBal(ownerAta(me, a.mint))));
-
-      const { ixs } = await fetchSwapIxs(me.toBase58(), items, 80, connection.rpcEndpoint);
-      const txA = new Transaction().add(...ixs);
-      txA.feePayer = me;
-      txA.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-      const signedA = await wallet.signTransaction(txA);
-      const sigA = await connection.sendRawTransaction(signedA.serialize());
-      await connection.confirmTransaction(sigA, "confirmed");
-
-      // measure what each swap actually delivered, then deposit it in-kind
-      const after = await Promise.all(b.assets.map((a) => tokenBal(ownerAta(me, a.mint))));
-      const uiAmounts = b.assets.map((a, i) => {
-        if (i === qi) return uiUsdcAmount * (a.targetWeightBps / 10000); // kept slice
-        return Number(after[i]! - before[i]!) / 10 ** a.decimals;
-      });
-      await depositAssets(uiAmounts);
-    } catch (e) {
-      pushToast("err", "Zap failed", (e as Error).message);
       setBusy(null);
     }
   };
@@ -457,7 +405,6 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     lastTx,
     deposit,
     depositAssets,
-    depositZap,
     withdraw,
     rebalance,
     togglePause,

@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import type { Live } from "@/lib/types";
 import { num, usd, shortAddr, explorerTx } from "@/lib/format";
-import { assetColor } from "@/lib/constants";
 import { Info } from "@/components/ui/Info";
 import { Modal } from "@/components/ui/Modal";
 import { TokenLogo } from "@/components/ui/TokenLogo";
@@ -22,7 +21,7 @@ interface Props {
   busy: "deposit" | "withdraw" | null;
   connected: boolean;
   onDepositAssets: (uiAmounts: number[]) => void;
-  onZap: (uiUsdcAmount: number) => void;
+  onDeposit: (uiUsdcAmount: number) => void;
   onWithdraw: () => void;
   onRefresh: () => void;
   result: TxResult | null;
@@ -60,7 +59,7 @@ export function TradePanel({
   busy,
   connected,
   onDepositAssets,
-  onZap,
+  onDeposit,
   onWithdraw,
   onRefresh,
   result,
@@ -75,23 +74,28 @@ export function TradePanel({
 
   const [openDep, setOpenDep] = useState(false);
   const [openWd, setOpenWd] = useState(false);
-  const [mode, setMode] = useState<"zap" | "manual">("zap");
-  const [zapAmt, setZapAmt] = useState("");
+  const [mode, setMode] = useState<"usdc" | "manual">("usdc");
+  const [usdcAmt, setUsdcAmt] = useState("");
   const quoteBal = assetBalances[qi] ?? 0;
-  const zapNum = Number(zapAmt) || 0;
-  const zapOver = connected && zapNum > quoteBal + 1e-9;
+  const usdcNum = Number(usdcAmt) || 0;
+  const usdcOver = connected && usdcNum > quoteBal + 1e-9;
 
   // per-asset deposit amounts (strings), reset when the fund / modal changes
   const [amts, setAmts] = useState<string[]>(() => assets.map(() => ""));
   useEffect(() => {
     setAmts(assets.map(() => ""));
-    setZapAmt("");
+    setUsdcAmt("");
   }, [pk, assets.length, openDep]);
 
   const bal = (i: number) => assetBalances[i] ?? 0;
   const setAmt = (i: number, v: string) => setAmts((cur) => cur.map((x, j) => (j === i ? v : x)));
   const priceOf = (i: number) => (live.amounts[i] > 0 ? live.valuesUsd[i] / live.amounts[i] : 0);
 
+  // USDC deposit preview: minted at live NAV (then keeper rebalances).
+  const usdcUsd = usdcNum * (priceOf(qi) || 1);
+  const usdcShares = (unitPrice > 0 ? usdcUsd / unitPrice : 0) * (1 - b.feeBps / 10000);
+
+  // manual (in-kind) preview
   const depUsd = assets.reduce((s, _, i) => s + (Number(amts[i]) || 0) * priceOf(i), 0);
   const grossShares = unitPrice > 0 ? depUsd / unitPrice : 0;
   const netShares = grossShares * (1 - b.feeBps / 10000);
@@ -103,19 +107,12 @@ export function TradePanel({
   const wdUsd = wd * unitPrice;
   const perAsset = assets.map((a, i) => ({ symbol: a.symbol, usd: wdUsd * ((live.weightsBps[i] ?? 0) / 10000) }));
 
-  // zap preview: USDC split across underlying by target weight
-  const zapSplit = assets.map((a, i) => ({
-    symbol: a.symbol,
-    usd: zapNum * (a.targetWeightBps / 10000),
-    isQuote: i === qi,
-  }));
-
   const submitDeposit = () => {
     onDepositAssets(amts.map((a) => Number(a) || 0));
     setOpenDep(false);
   };
-  const submitZap = () => {
-    onZap(zapNum);
+  const submitUsdc = () => {
+    onDeposit(usdcNum);
     setOpenDep(false);
   };
   const submitWithdraw = () => {
@@ -144,13 +141,13 @@ export function TradePanel({
         {result && <ResultRow sig={result.sig} />}
       </div>
 
-      {/* ---- deposit modal: multi-asset, in-kind ---- */}
+      {/* ---- deposit modal ---- */}
       <Modal open={openDep} onClose={() => setOpenDep(false)}>
         <div className="trade-modal">
           <div className="cm-head tm-head">
             <div>
               <h2>Deposit</h2>
-              <p>One token, swapped into the fund via Raydium — or add tokens manually.</p>
+              <p>Deposit {quoteSym} and mint fund tokens at live NAV — the keeper rebalances the basket. Or add tokens per-asset.</p>
             </div>
             <button className="tm-refresh" type="button" onClick={onRefresh} aria-label="Refresh balances">
               <IconRefresh width={16} height={16} />
@@ -158,47 +155,38 @@ export function TradePanel({
           </div>
 
           <div className="segmented dep-modeswitch">
-            <button type="button" className={"seg" + (mode === "zap" ? " on" : "")} onClick={() => setMode("zap")}>
-              Zap from {quoteSym}
+            <button type="button" className={"seg" + (mode === "usdc" ? " on" : "")} onClick={() => setMode("usdc")}>
+              {quoteSym}
             </button>
             <button type="button" className={"seg" + (mode === "manual" ? " on" : "")} onClick={() => setMode("manual")}>
               Per token
             </button>
           </div>
 
-          {mode === "zap" ? (
+          {mode === "usdc" ? (
             <div className="cm-body">
               <div className="th">
                 <span className="t">Deposit {quoteSym}</span>
                 {connected && (
-                  <button type="button" className="bal bal-btn" onClick={() => setZapAmt(String(quoteBal))}>
+                  <button type="button" className="bal bal-btn" onClick={() => setUsdcAmt(String(quoteBal))}>
                     balance {num(quoteBal, 2)} {quoteSym}
                   </button>
                 )}
               </div>
-              <div className={"field" + (zapOver ? " field-err" : "")}>
-                <input value={zapAmt} onChange={(e) => setZapAmt(e.target.value)} inputMode="decimal" placeholder="0.00" />
-                <button className="maxbtn" type="button" onClick={() => setZapAmt(String(quoteBal))}>
+              <div className={"field" + (usdcOver ? " field-err" : "")}>
+                <input value={usdcAmt} onChange={(e) => setUsdcAmt(e.target.value)} inputMode="decimal" placeholder="0.00" />
+                <button className="maxbtn" type="button" onClick={() => setUsdcAmt(String(quoteBal))}>
                   MAX
                 </button>
               </div>
-              <div className="dep-split">
-                <div className="dep-split-head">Swapped via Raydium → {assets.length} underlying tokens</div>
-                {zapSplit.map((s, i) => (
-                  <div className="dsplit-row" key={s.symbol} style={{ "--i": i } as CSSProperties}>
-                    <span className="dsplit-id">
-                      <TokenLogo symbol={s.symbol} index={i} size={18} /> {s.symbol}
-                    </span>
-                    <span className="dsplit-bar" aria-hidden>
-                      <span style={{ width: `${assets[i]!.targetWeightBps / 100}%`, background: assetColor(s.symbol, i) }} />
-                    </span>
-                    <span className="dsplit-val">
-                      {zapNum > 0 ? usd(s.usd) : `${(assets[i]!.targetWeightBps / 100).toFixed(0)}%`}
-                      {s.isQuote ? " · kept" : ""}
-                    </span>
+              {usdcNum > 0 && (
+                <div className="preview tm-preview">
+                  <div className="prow">
+                    <span>You deposit ≈ {usd(usdcUsd)}</span>
+                    <span className="pv">≈ {num(usdcShares)} tokens</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="cm-body dep-rows">
@@ -238,17 +226,20 @@ export function TradePanel({
           )}
 
           <div className="tm-note">
-            <Info k="deployCost" /> {mode === "zap" ? "Swaps run on Raydium, then an in-kind deposit." : "A small, refundable rent (~0.002 SOL) may apply for new token accounts."}
+            <Info k="deployCost" />{" "}
+            {mode === "usdc"
+              ? "Minted at live NAV; the keeper rebalances the basket into target weights."
+              : "A small, refundable rent (~0.002 SOL) may apply for new token accounts."}
           </div>
 
           <div className="cm-foot tm-foot">
-            {mode === "zap" ? (
-              <button className="act cm-create" disabled={busy !== null || zapNum <= 0 || zapOver} onClick={submitZap}>
+            {mode === "usdc" ? (
+              <button className="act cm-create" disabled={busy !== null || usdcNum <= 0 || usdcOver} onClick={submitUsdc}>
                 {busy === "deposit" ? (
                   <>
-                    <span className="spinner" /> Swapping & depositing…
+                    <span className="spinner" /> Depositing…
                   </>
-                ) : zapOver ? (
+                ) : usdcOver ? (
                   `Not enough ${quoteSym}`
                 ) : (
                   `Deposit ${quoteSym}`

@@ -14,6 +14,110 @@ export type MiniSymmetry = {
   },
   "instructions": [
     {
+      "name": "activateIntent",
+      "docs": [
+        "Permissionless: apply a proposed param change once its time-lock elapses."
+      ],
+      "discriminator": [
+        199,
+        118,
+        173,
+        147,
+        43,
+        68,
+        15,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "basket",
+          "writable": true
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "activator",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelIntent",
+      "docs": [
+        "Owner: cancel a pending intent before it activates."
+      ],
+      "discriminator": [
+        67,
+        73,
+        238,
+        244,
+        208,
+        89,
+        225,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "basket"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createBasket",
       "docs": [
         "Create a basket from `num_assets` supported assets + target weights.",
@@ -351,6 +455,90 @@ export type MiniSymmetry = {
       "args": []
     },
     {
+      "name": "proposeIntent",
+      "docs": [
+        "Owner: propose a time-locked param change (rebalance thresholds/interval/",
+        "spread + deposit fee). Anyone can activate it after `delay_secs`",
+        "(>= MIN_INTENT_DELAY) — depositors can exit before the change lands."
+      ],
+      "discriminator": [
+        235,
+        187,
+        3,
+        3,
+        160,
+        187,
+        162,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "basket"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "thresholdBps",
+          "type": "u16"
+        },
+        {
+          "name": "thresholdRelBps",
+          "type": "u16"
+        },
+        {
+          "name": "intervalSecs",
+          "type": "i64"
+        },
+        {
+          "name": "spreadBps",
+          "type": "u16"
+        },
+        {
+          "name": "depositFeeBps",
+          "type": "u16"
+        },
+        {
+          "name": "delaySecs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "rebalance",
       "docs": [
         "Keeper-driven rebalance toward target weights via an oracle-priced mock swap",
@@ -416,58 +604,6 @@ export type MiniSymmetry = {
         {
           "name": "assetIndex",
           "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "setParams",
-      "docs": [
-        "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
-        "and deposit fee."
-      ],
-      "discriminator": [
-        27,
-        234,
-        178,
-        52,
-        147,
-        2,
-        187,
-        141
-      ],
-      "accounts": [
-        {
-          "name": "basket",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "basket"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "thresholdBps",
-          "type": "u16"
-        },
-        {
-          "name": "thresholdRelBps",
-          "type": "u16"
-        },
-        {
-          "name": "intervalSecs",
-          "type": "i64"
-        },
-        {
-          "name": "spreadBps",
-          "type": "u16"
-        },
-        {
-          "name": "depositFeeBps",
-          "type": "u16"
         }
       ]
     },
@@ -637,6 +773,19 @@ export type MiniSymmetry = {
       ]
     },
     {
+      "name": "intent",
+      "discriminator": [
+        247,
+        162,
+        35,
+        165,
+        254,
+        111,
+        129,
+        109
+      ]
+    },
+    {
       "name": "registry",
       "discriminator": [
         47,
@@ -688,6 +837,45 @@ export type MiniSymmetry = {
         35,
         100,
         57
+      ]
+    },
+    {
+      "name": "intentActivated",
+      "discriminator": [
+        83,
+        219,
+        183,
+        115,
+        170,
+        231,
+        181,
+        176
+      ]
+    },
+    {
+      "name": "intentCanceled",
+      "discriminator": [
+        67,
+        178,
+        13,
+        16,
+        243,
+        179,
+        16,
+        214
+      ]
+    },
+    {
+      "name": "intentProposed",
+      "discriminator": [
+        249,
+        245,
+        19,
+        13,
+        26,
+        73,
+        164,
+        131
       ]
     },
     {
@@ -890,6 +1078,16 @@ export type MiniSymmetry = {
       "code": 6031,
       "name": "alreadyBalanced",
       "msg": "asset already within target ratio — nothing to rebalance"
+    },
+    {
+      "code": 6032,
+      "name": "intentNotReady",
+      "msg": "intent not yet activatable — time-lock has not elapsed"
+    },
+    {
+      "code": 6033,
+      "name": "badDelay",
+      "msg": "delay is below the minimum time-lock"
     }
   ],
   "types": [
@@ -1075,6 +1273,99 @@ export type MiniSymmetry = {
           {
             "name": "navBefore",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "intent",
+      "docs": [
+        "A time-locked, pending param change for a basket (one per basket).",
+        "The owner proposes it; anyone can activate it once `activate_ts` passes —",
+        "so depositors see a fee/param change coming and can exit first."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "activateTs",
+            "type": "i64"
+          },
+          {
+            "name": "thresholdBps",
+            "type": "u16"
+          },
+          {
+            "name": "thresholdRelBps",
+            "type": "u16"
+          },
+          {
+            "name": "spreadBps",
+            "type": "u16"
+          },
+          {
+            "name": "depositFeeBps",
+            "type": "u16"
+          },
+          {
+            "name": "intervalSecs",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "intentActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "intentCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "intentProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "activateTs",
+            "type": "i64"
           }
         ]
       }

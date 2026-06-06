@@ -63,3 +63,20 @@ pub struct Registry {
     pub _pad: [u8; 3],
     pub baskets: [Pubkey; MAX_BASKETS],
 }
+
+/// A time-locked, pending param change for a basket (one per basket).
+/// The owner proposes it; anyone can activate it once `activate_ts` passes —
+/// so depositors see a fee/param change coming and can exit first.
+#[account]
+#[derive(InitSpace)]
+pub struct Intent {
+    pub basket: Pubkey,
+    pub proposer: Pubkey,
+    pub activate_ts: i64,
+    pub threshold_bps: u16,
+    pub threshold_rel_bps: u16,
+    pub spread_bps: u16,
+    pub deposit_fee_bps: u16,
+    pub interval_secs: i64,
+    pub bump: u8,
+}

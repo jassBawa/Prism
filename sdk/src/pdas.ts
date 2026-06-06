@@ -1,7 +1,7 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { ASSET_SEED, BASKET_SEED, MINT_SEED, PROGRAM_ID, REGISTRY_SEED } from "./constants.js";
+import { ASSET_SEED, BASKET_SEED, INTENT_SEED, MINT_SEED, PROGRAM_ID, REGISTRY_SEED } from "./constants.js";
 
 /** The singleton basket registry PDA. */
 export const registryPda = (): PublicKey => PublicKey.findProgramAddressSync([REGISTRY_SEED], PROGRAM_ID)[0];
@@ -19,6 +19,10 @@ export const basketMintPda = (basket: PublicKey): PublicKey =>
 /** SupportedAsset allowlist PDA — one per mint. */
 export const supportedAssetPda = (mint: PublicKey): PublicKey =>
   PublicKey.findProgramAddressSync([ASSET_SEED, mint.toBuffer()], PROGRAM_ID)[0];
+
+/** Pending-intent PDA — one per basket (time-locked param change). */
+export const intentPda = (basket: PublicKey): PublicKey =>
+  PublicKey.findProgramAddressSync([INTENT_SEED, basket.toBuffer()], PROGRAM_ID)[0];
 
 /** A basket vault is the ATA owned by the Basket PDA (allowOwnerOffCurve=true). */
 export const vaultAta = (basket: PublicKey, mint: PublicKey): PublicKey =>

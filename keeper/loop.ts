@@ -12,6 +12,8 @@ import { loadPoolsConfig, poolForPair, pk, rawBalance, type PoolsConfig } from "
 import { rebalanceOneRemaining, rebalanceRemaining } from "../sdk/src/accounts.js";
 import { computeDrift, driftTriggers } from "../sdk/src/math.js";
 import { latestPricesMicro, sendWithPyth } from "../sdk/src/pyth.js";
+import { fetchIntent } from "../sdk/src/intents.js";
+import { intentPda } from "../sdk/src/pdas.js";
 import type { MiniSymmetry } from "../sdk/src/mini_symmetry.js";
 import { rearbPools } from "./pools.js";
 import { recordNav } from "./history.js";
@@ -130,6 +132,30 @@ async function rebalanceMock(
   console.log("  ✅", sigs.map((s) => explorer("tx", s)).join(" "));
 }
 
+/** Permissionless governance: apply any pending param change whose time-lock has elapsed.
+ *  Plain rpc (no Pyth). Best-effort per basket — never breaks the rebalance loop. The
+ *  activator reclaims the closed Intent's rent, so this is a tiny self-funding incentive. */
+async function activateRipeIntents(
+  program: Program<MiniSymmetry>,
+  admin: Keypair,
+  baskets: OnchainBasket[],
+): Promise<void> {
+  const t = now();
+  for (const b of baskets) {
+    try {
+      const it = await fetchIntent(program, b.pubkey);
+      if (!it || t < it.activateTs) continue;
+      const sig = await program.methods
+        .activateIntent()
+        .accountsPartial({ basket: b.pubkey, intent: intentPda(b.pubkey), activator: admin.publicKey })
+        .rpc();
+      console.log(`  ⏱ activated intent on ${labelOf(b)} → fee=${it.depositFeeBps}bps`, explorer("tx", sig));
+    } catch (e) {
+      console.error(`[#${b.id}] intent activate error:`, (e as Error).message);
+    }
+  }
+}
+
 async function tickBasket(
   conn: Connection,
   program: Program<MiniSymmetry>,
@@ -200,6 +226,7 @@ export async function startKeeper(opts: KeeperOpts = {}): Promise<void> {
 
         const mockFunds = baskets.filter((b) => !realPath(b, pools));
         if (mockFunds.length) await topUpReserves(conn, admin, mockFunds);
+        await activateRipeIntents(program, admin, baskets);
         for (const b of baskets) {
           try {
             await tickBasket(conn, program, admin, b, pools);

@@ -13,7 +13,7 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID, createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-token";
 import { RPC_URL } from "@/lib/constants";
-import { fetchAllBaskets, getProgram, getReadProgram, ownerAta, vaultAta, type BasketView } from "@/lib/program";
+import { fetchAllBaskets, getProgram, getReadProgram, intentPda, ownerAta, vaultAta, type BasketView, type IntentParams } from "@/lib/program";
 import { computeState } from "@/lib/math";
 import { depositAssetsRemaining, depositRemaining, rebalanceOneRemaining, rebalanceRemaining, withdrawRemaining } from "@/lib/accounts";
 import { latestPricesUsd, sendWithPyth } from "@/lib/pyth";
@@ -56,6 +56,9 @@ interface PrismCtx {
   withdraw: () => Promise<void>;
   rebalance: (b: BasketView) => Promise<void>;
   togglePause: (b: BasketView, paused: boolean) => Promise<void>;
+  proposeIntent: (b: BasketView, p: IntentParams, delaySecs: number) => Promise<void>;
+  activateIntent: (b: BasketView) => Promise<void>;
+  cancelIntent: (b: BasketView) => Promise<void>;
   toasts: Toast[];
   pushToast: (kind: ToastKind, msg: string, sub?: string) => number;
   dismissToast: (id: number) => void;
@@ -382,6 +385,63 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Owner: propose a time-locked param change. Activatable by anyone after `delaySecs`.
+  const proposeIntent = async (b: BasketView, p: IntentParams, delaySecs: number) => {
+    if (!wallet) return;
+    setAdminBusy(b.pubkey.toBase58());
+    try {
+      const program = getProgram(wallet, connection);
+      await program.methods
+        .proposeIntent(p.thresholdBps, p.thresholdRelBps, new BN(p.intervalSecs), p.spreadBps, p.depositFeeBps, new BN(delaySecs))
+        .accountsPartial({ basket: b.pubkey, authority: wallet.publicKey, intent: intentPda(b.pubkey) })
+        .rpc();
+      pushToast("ok", "Change proposed", `activates in ${delaySecs}s — anyone can apply it then`);
+      await refresh();
+    } catch (e) {
+      pushToast("err", "Propose failed", (e as Error).message);
+    } finally {
+      setAdminBusy(null);
+    }
+  };
+
+  // Permissionless: apply a proposed change once its time-lock has elapsed.
+  const activateIntent = async (b: BasketView) => {
+    if (!wallet) return;
+    setAdminBusy(b.pubkey.toBase58());
+    try {
+      const program = getProgram(wallet, connection);
+      await program.methods
+        .activateIntent()
+        .accountsPartial({ basket: b.pubkey, intent: intentPda(b.pubkey), activator: wallet.publicKey })
+        .rpc();
+      pushToast("ok", "Change applied", "new params are live on-chain");
+      await refresh();
+    } catch (e) {
+      pushToast("err", "Activate failed", (e as Error).message);
+    } finally {
+      setAdminBusy(null);
+    }
+  };
+
+  // Owner: cancel a pending intent before it activates.
+  const cancelIntent = async (b: BasketView) => {
+    if (!wallet) return;
+    setAdminBusy(b.pubkey.toBase58());
+    try {
+      const program = getProgram(wallet, connection);
+      await program.methods
+        .cancelIntent()
+        .accountsPartial({ basket: b.pubkey, authority: wallet.publicKey, intent: intentPda(b.pubkey) })
+        .rpc();
+      pushToast("ok", "Proposal canceled", "");
+      await refresh();
+    } catch (e) {
+      pushToast("err", "Cancel failed", (e as Error).message);
+    } finally {
+      setAdminBusy(null);
+    }
+  };
+
   const value: PrismCtx = {
     lives,
     loading,
@@ -408,6 +468,9 @@ export function PrismProvider({ children }: { children: ReactNode }) {
     withdraw,
     rebalance,
     togglePause,
+    proposeIntent,
+    activateIntent,
+    cancelIntent,
     toasts,
     pushToast,
     dismissToast,

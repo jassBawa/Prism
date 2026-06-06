@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";
 import type { Live } from "@/lib/types";
-import type { BasketView } from "@/lib/program";
+import type { BasketView, IntentParams } from "@/lib/program";
 import { usd, num, pct, dateFmt } from "@/lib/format";
 import { Info } from "@/components/ui/Info";
 
@@ -58,6 +58,9 @@ interface Props {
   adminBusy: string | null;
   onRebalance: (b: BasketView) => void;
   onTogglePause: (b: BasketView, paused: boolean) => void;
+  onProposeIntent: (b: BasketView, p: IntentParams, delaySecs: number) => void;
+  onActivateIntent: (b: BasketView) => void;
+  onCancelIntent: (b: BasketView) => void;
 }
 
 export function BasketDetail({
@@ -77,6 +80,9 @@ export function BasketDetail({
   adminBusy,
   onRebalance,
   onTogglePause,
+  onProposeIntent,
+  onActivateIntent,
+  onCancelIntent,
 }: Props) {
   const b = live.view;
   const symbols = b.assets.map((a) => a.symbol);
@@ -247,6 +253,9 @@ export function BasketDetail({
             adminBusy={adminBusy}
             onRebalance={onRebalance}
             onTogglePause={onTogglePause}
+            onProposeIntent={onProposeIntent}
+            onActivateIntent={onActivateIntent}
+            onCancelIntent={onCancelIntent}
           />
         </aside>
       </div>

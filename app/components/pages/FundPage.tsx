@@ -53,6 +53,9 @@ export function FundPage() {
           adminBusy={p.adminBusy}
           onRebalance={p.rebalance}
           onTogglePause={p.togglePause}
+          onProposeIntent={p.proposeIntent}
+          onActivateIntent={p.activateIntent}
+          onCancelIntent={p.cancelIntent}
         />
       )}
     </>

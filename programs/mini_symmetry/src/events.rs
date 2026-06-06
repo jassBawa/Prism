@@ -38,3 +38,20 @@ pub struct Rebalanced {
     pub max_drift_bps: u16,
     pub nav: u64,
 }
+
+#[event]
+pub struct IntentProposed {
+    pub basket: Pubkey,
+    pub proposer: Pubkey,
+    pub activate_ts: i64,
+}
+
+#[event]
+pub struct IntentActivated {
+    pub basket: Pubkey,
+}
+
+#[event]
+pub struct IntentCanceled {
+    pub basket: Pubkey,
+}

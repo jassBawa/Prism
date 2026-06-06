@@ -145,24 +145,37 @@ pub mod mini_symmetry {
         instructions::rebalance_one::rebalance_one_handler(ctx, asset_index)
     }
 
-    /// Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,
-    /// and deposit fee.
-    pub fn set_params(
-        ctx: Context<BasketAdmin>,
+    /// Owner: propose a time-locked param change (rebalance thresholds/interval/
+    /// spread + deposit fee). Anyone can activate it after `delay_secs`
+    /// (>= MIN_INTENT_DELAY) — depositors can exit before the change lands.
+    pub fn propose_intent(
+        ctx: Context<ProposeIntent>,
         threshold_bps: u16,
         threshold_rel_bps: u16,
         interval_secs: i64,
         spread_bps: u16,
         deposit_fee_bps: u16,
+        delay_secs: i64,
     ) -> Result<()> {
-        instructions::admin::set_params_handler(
+        instructions::intent::propose_intent_handler(
             ctx,
             threshold_bps,
             threshold_rel_bps,
             interval_secs,
             spread_bps,
             deposit_fee_bps,
+            delay_secs,
         )
+    }
+
+    /// Permissionless: apply a proposed param change once its time-lock elapses.
+    pub fn activate_intent(ctx: Context<ActivateIntent>) -> Result<()> {
+        instructions::intent::activate_intent_handler(ctx)
+    }
+
+    /// Owner: cancel a pending intent before it activates.
+    pub fn cancel_intent(ctx: Context<CancelIntent>) -> Result<()> {
+        instructions::intent::cancel_intent_handler(ctx)
     }
 
     /// Owner: pause / unpause a basket (halts deposit + rebalance).

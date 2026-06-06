@@ -14,6 +14,9 @@ export const BASKET_SEED = Buffer.from("basket");
 export const MINT_SEED = Buffer.from("mint");
 export const ASSET_SEED = Buffer.from("asset");
 export const REGISTRY_SEED = Buffer.from("registry");
+export const INTENT_SEED = Buffer.from("intent");
+/** Minimum time-lock (seconds) on a proposed param change — matches the program. */
+export const MIN_INTENT_DELAY = 60;
 
 export const PYTH_RECEIVER = new PublicKey(
   "rec5EKMGg6MxZYaMdyBfgwp4d5rB9T1VQH5pJv5LtFJ",

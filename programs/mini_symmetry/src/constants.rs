@@ -8,6 +8,10 @@ pub const BASKET_SEED: &[u8] = b"basket";
 pub const MINT_SEED: &[u8] = b"mint";
 pub const ASSET_SEED: &[u8] = b"asset";
 pub const REGISTRY_SEED: &[u8] = b"registry";
+pub const INTENT_SEED: &[u8] = b"intent";
+/// Minimum time-lock (seconds) on a proposed param change — gives depositors a
+/// window to exit before a fee/param change takes effect.
+pub const MIN_INTENT_DELAY: i64 = 60;
 /// Max baskets tracked in the on-chain registry (keeps init under the 10 KB CPI cap).
 pub const MAX_BASKETS: usize = 256;
 

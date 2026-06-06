@@ -66,4 +66,8 @@ pub enum MsError {
     SwapDirectionMismatch,
     #[msg("asset already within target ratio — nothing to rebalance")]
     AlreadyBalanced,
+    #[msg("intent not yet activatable — time-lock has not elapsed")]
+    IntentNotReady,
+    #[msg("delay is below the minimum time-lock")]
+    BadDelay,
 }

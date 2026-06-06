@@ -28,6 +28,11 @@ export const supportedAssetPda = (mint: PublicKey): PublicKey =>
   )[0];
 export const registryPda = (): PublicKey =>
   PublicKey.findProgramAddressSync([Buffer.from("registry")], PROGRAM_ID)[0];
+export const intentPda = (basket: PublicKey): PublicKey =>
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("intent"), basket.toBuffer()],
+    PROGRAM_ID,
+  )[0];
 export const vaultAta = (basket: PublicKey, mint: PublicKey): PublicKey =>
   getAssociatedTokenAddressSync(mint, basket, true);
 export const ownerAta = (owner: PublicKey, mint: PublicKey): PublicKey =>
@@ -72,6 +77,25 @@ export interface OnchainAsset {
   symbol: string;
 }
 
+/** The 5 mutable params a time-locked Intent carries. */
+export interface IntentParams {
+  thresholdBps: number;
+  thresholdRelBps: number;
+  intervalSecs: number;
+  spreadBps: number;
+  depositFeeBps: number;
+}
+
+/** A pending, time-locked param change for a basket (null when none). */
+export interface PendingIntent {
+  activateTs: number;
+  thresholdBps: number;
+  thresholdRelBps: number;
+  spreadBps: number;
+  depositFeeBps: number;
+  intervalSecs: number;
+}
+
 export interface BasketView {
   pubkey: PublicKey;
   authority: PublicKey;
@@ -94,6 +118,7 @@ export interface BasketView {
   intervalSecs: number;
   lastRebalanceTs: number;
   paused: boolean;
+  pendingIntent: PendingIntent | null;
 }
 
 interface RawAsset {
@@ -128,6 +153,18 @@ interface RawBasket {
 interface RawRegistry {
   count: number;
   baskets: PublicKey[];
+}
+
+interface RawIntent {
+  basket: PublicKey;
+  proposer: PublicKey;
+  activateTs: BN;
+  thresholdBps: number;
+  thresholdRelBps: number;
+  spreadBps: number;
+  depositFeeBps: number;
+  intervalSecs: BN;
+  bump: number;
 }
 
 const toHex = (bytes: number[]): string => Buffer.from(bytes).toString("hex");
@@ -166,6 +203,7 @@ function decodeBasket(pubkey: PublicKey, a: RawBasket): BasketView {
     intervalSecs: a.rebalanceIntervalSecs.toNumber(),
     lastRebalanceTs: a.lastRebalanceTs.toNumber(),
     paused: a.paused,
+    pendingIntent: null,
   };
 }
 
@@ -192,5 +230,28 @@ export async function fetchAllBaskets(
       /* stale/old-layout basket — skip */
     }
   });
+
+  // Attach any pending time-locked param change (one Intent PDA per basket).
+  // Batched getMultipleAccounts; an absent PDA → null (no proposal outstanding).
+  if (out.length) {
+    const intentKeys = out.map((b) => intentPda(b.pubkey));
+    const intentInfos = await program.provider.connection.getMultipleAccountsInfo(intentKeys);
+    intentInfos.forEach((info, i) => {
+      if (!info) return;
+      try {
+        const it = program.coder.accounts.decode<RawIntent>("intent", info.data);
+        out[i]!.pendingIntent = {
+          activateTs: it.activateTs.toNumber(),
+          thresholdBps: it.thresholdBps,
+          thresholdRelBps: it.thresholdRelBps,
+          spreadBps: it.spreadBps,
+          depositFeeBps: it.depositFeeBps,
+          intervalSecs: it.intervalSecs.toNumber(),
+        };
+      } catch {
+        /* undecodable — leave null */
+      }
+    });
+  }
   return out.sort((x, y) => x.id - y.id);
 }

@@ -8,6 +8,110 @@
   },
   "instructions": [
     {
+      "name": "activate_intent",
+      "docs": [
+        "Permissionless: apply a proposed param change once its time-lock elapses."
+      ],
+      "discriminator": [
+        199,
+        118,
+        173,
+        147,
+        43,
+        68,
+        15,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "basket",
+          "writable": true
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "activator",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_intent",
+      "docs": [
+        "Owner: cancel a pending intent before it activates."
+      ],
+      "discriminator": [
+        67,
+        73,
+        238,
+        244,
+        208,
+        89,
+        225,
+        59
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "basket"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "create_basket",
       "docs": [
         "Create a basket from `num_assets` supported assets + target weights.",
@@ -345,6 +449,90 @@
       "args": []
     },
     {
+      "name": "propose_intent",
+      "docs": [
+        "Owner: propose a time-locked param change (rebalance thresholds/interval/",
+        "spread + deposit fee). Anyone can activate it after `delay_secs`",
+        "(>= MIN_INTENT_DELAY) — depositors can exit before the change lands."
+      ],
+      "discriminator": [
+        235,
+        187,
+        3,
+        3,
+        160,
+        187,
+        162,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "basket"
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "basket"
+          ]
+        },
+        {
+          "name": "intent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  116,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "basket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "threshold_bps",
+          "type": "u16"
+        },
+        {
+          "name": "threshold_rel_bps",
+          "type": "u16"
+        },
+        {
+          "name": "interval_secs",
+          "type": "i64"
+        },
+        {
+          "name": "spread_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "delay_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
       "name": "rebalance",
       "docs": [
         "Keeper-driven rebalance toward target weights via an oracle-priced mock swap",
@@ -410,58 +598,6 @@
         {
           "name": "asset_index",
           "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "set_params",
-      "docs": [
-        "Owner: set a basket's rebalance thresholds (abs + rel), interval, spread,",
-        "and deposit fee."
-      ],
-      "discriminator": [
-        27,
-        234,
-        178,
-        52,
-        147,
-        2,
-        187,
-        141
-      ],
-      "accounts": [
-        {
-          "name": "basket",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "basket"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "threshold_bps",
-          "type": "u16"
-        },
-        {
-          "name": "threshold_rel_bps",
-          "type": "u16"
-        },
-        {
-          "name": "interval_secs",
-          "type": "i64"
-        },
-        {
-          "name": "spread_bps",
-          "type": "u16"
-        },
-        {
-          "name": "deposit_fee_bps",
-          "type": "u16"
         }
       ]
     },
@@ -631,6 +767,19 @@
       ]
     },
     {
+      "name": "Intent",
+      "discriminator": [
+        247,
+        162,
+        35,
+        165,
+        254,
+        111,
+        129,
+        109
+      ]
+    },
+    {
       "name": "Registry",
       "discriminator": [
         47,
@@ -682,6 +831,45 @@
         35,
         100,
         57
+      ]
+    },
+    {
+      "name": "IntentActivated",
+      "discriminator": [
+        83,
+        219,
+        183,
+        115,
+        170,
+        231,
+        181,
+        176
+      ]
+    },
+    {
+      "name": "IntentCanceled",
+      "discriminator": [
+        67,
+        178,
+        13,
+        16,
+        243,
+        179,
+        16,
+        214
+      ]
+    },
+    {
+      "name": "IntentProposed",
+      "discriminator": [
+        249,
+        245,
+        19,
+        13,
+        26,
+        73,
+        164,
+        131
       ]
     },
     {
@@ -884,6 +1072,16 @@
       "code": 6031,
       "name": "AlreadyBalanced",
       "msg": "asset already within target ratio — nothing to rebalance"
+    },
+    {
+      "code": 6032,
+      "name": "IntentNotReady",
+      "msg": "intent not yet activatable — time-lock has not elapsed"
+    },
+    {
+      "code": 6033,
+      "name": "BadDelay",
+      "msg": "delay is below the minimum time-lock"
     }
   ],
   "types": [
@@ -1069,6 +1267,99 @@
           {
             "name": "nav_before",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Intent",
+      "docs": [
+        "A time-locked, pending param change for a basket (one per basket).",
+        "The owner proposes it; anyone can activate it once `activate_ts` passes —",
+        "so depositors see a fee/param change coming and can exit first."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "activate_ts",
+            "type": "i64"
+          },
+          {
+            "name": "threshold_bps",
+            "type": "u16"
+          },
+          {
+            "name": "threshold_rel_bps",
+            "type": "u16"
+          },
+          {
+            "name": "spread_bps",
+            "type": "u16"
+          },
+          {
+            "name": "deposit_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "interval_secs",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IntentActivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IntentCanceled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IntentProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket",
+            "type": "pubkey"
+          },
+          {
+            "name": "proposer",
+            "type": "pubkey"
+          },
+          {
+            "name": "activate_ts",
+            "type": "i64"
           }
         ]
       }

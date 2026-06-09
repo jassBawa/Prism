@@ -27,10 +27,13 @@ export function depositAssetsRemaining(basket: PublicKey, user: PublicKey, asset
   ];
 }
 
-/** rebalance_one: [price_i, price_q, <13 CPMM swap accts>, cpmm_program] (16).
+/** rebalance_one: [vault_0..n-1, price_0..n-1, <13 CPMM swap accts>, cpmm_program] (2n+14).
+ *  The vault+price prefix (all assets, in order) lets the program compute full NAV and
+ *  size the leg to its NAV share — one-pass convergence. `assets` MUST be in basket order.
  *  `buy` = swap quote -> asset (asset under-weight); else asset -> quote. */
 export function rebalanceOneRemaining(
   basket: PublicKey,
+  assets: AssetEntry[],
   asset: AssetEntry,
   quote: AssetEntry,
   pool: PoolEntry,
@@ -44,8 +47,8 @@ export function rebalanceOneRemaining(
   const inPoolVault = pk(inIsToken0 ? pool.vault0 : pool.vault1);
   const outPoolVault = pk(inIsToken0 ? pool.vault1 : pool.vault0);
   return [
-    ro(priceFor(asset.feed)), // price_i
-    ro(priceFor(quote.feed)), // price_q
+    ...assets.map((a) => ro(vaultAta(basket, pk(a.mint)))), // vault_0..n-1 (NAV read)
+    ...assets.map((a) => ro(priceFor(a.feed))), // price_0..n-1 (NAV + swap pricing)
     ro(basket), //  0 payer (basket PDA — signs the CPI internally)
     ro(pk(pool.authority)), //  1 authority
     ro(pk(pool.configId)), //  2 amm_config

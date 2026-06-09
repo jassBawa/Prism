@@ -38,17 +38,16 @@ async function main() {
     b.assets.map((a: any, i: number) => `${a.key} ${((before[i]! / nav0) * 100).toFixed(1)}% (tgt ${a.weightBps / 100}%)`).join("  "),
   );
 
-  // direction: asset under-weight vs quote (value_i/value_q < w_i/w_q) -> buy asset
-  const ratio = before[ASSET_I]! / before[b.quoteIndex]!;
-  const target = asset.weightBps / quote.weightBps;
-  const buy = ratio < target;
-  console.log(`asset ${asset.key}: value-ratio ${ratio.toFixed(3)} vs target ${target.toFixed(3)} -> ${buy ? "BUY" : "SELL"} ${asset.key}`);
+  // direction: asset under-weight vs its NAV share (value_i < NAV * w_i) -> buy asset
+  const targetValue = (nav0 * asset.weightBps) / 10000;
+  const buy = before[ASSET_I]! < targetValue;
+  console.log(`asset ${asset.key}: value $${before[ASSET_I]!.toFixed(2)} vs NAV-share $${targetValue.toFixed(2)} -> ${buy ? "BUY" : "SELL"} ${asset.key}`);
 
-  const sigs = await sendWithPyth(conn, admin, [asset.feed, quote.feed], async (priceFor: any) =>
+  const sigs = await sendWithPyth(conn, admin, b.assets.map((a: any) => a.feed), async (priceFor: any) =>
     program.methods
       .rebalanceOne(ASSET_I)
       .accountsPartial({ basket: pk(b.basket), keeper: admin.publicKey })
-      .remainingAccounts(rebalanceOneRemaining(pk(b.basket), asset, quote, pool, buy, priceFor, cpmm))
+      .remainingAccounts(rebalanceOneRemaining(pk(b.basket), b.assets, asset, quote, pool, buy, priceFor, cpmm))
       .instruction(),
   );
   console.log("rebalanced:", sigs[sigs.length - 1]);

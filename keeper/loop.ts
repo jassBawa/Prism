@@ -50,28 +50,34 @@ async function topUpReserves(conn: Connection, admin: Keypair, baskets: OnchainB
   }
 }
 
-/** Does any non-quote leg breach the pairwise threshold AND have a pool? This is the real
- *  path's true firing condition (matches `rebalance_one`), unlike the NAV dual gate used for
- *  the mock path — so the keeper only calls rebalanceReal when a swap will actually fire. */
+/** NAV-share value of every asset (micro-USD), in basket order. */
+function legValues(b: OnchainBasket, balances: bigint[], prices: Record<string, number>): number[] {
+  return b.assets.map((a, i) => (Number(balances[i]) / 10 ** a.decimals) * ((prices[a.feed] ?? 0) / 1e6));
+}
+
+/** Does any non-quote leg breach its NAV-share threshold AND have a pool? This matches
+ *  `rebalance_one`'s on-chain gate (relative drift of value_i vs `NAV * w_i`), so the
+ *  keeper only calls rebalanceReal when a swap will actually fire (no AlreadyBalanced). */
 function someLegQualifies(b: OnchainBasket, balances: bigint[], prices: Record<string, number>, pools: PoolsConfig): boolean {
-  const qi = b.quoteIndex;
-  const quote = b.assets[qi]!;
-  const value = (i: number) => (Number(balances[i]) / 10 ** b.assets[i]!.decimals) * ((prices[b.assets[i]!.feed] ?? 0) / 1e6);
-  const vq = value(qi);
-  if (vq <= 0) return false;
+  const quote = b.assets[b.quoteIndex]!;
+  const values = legValues(b, balances, prices);
+  const nav = values.reduce((s, v) => s + v, 0);
+  if (nav <= 0) return false;
   for (let i = 0; i < b.assets.length; i++) {
-    if (i === qi) continue;
+    if (i === b.quoteIndex) continue;
     const a = b.assets[i]!;
-    const lhs = value(i) * quote.weightBps;
-    const rhs = a.weightBps * vq;
-    const denom = Math.max(lhs, rhs);
-    const driftBps = denom > 0 ? (Math.abs(lhs - rhs) / denom) * 10000 : 0;
+    const target = (nav * a.weightBps) / 10000;
+    const denom = Math.max(values[i]!, target);
+    const driftBps = denom > 0 ? (Math.abs(values[i]! - target) / denom) * 10000 : 0;
     if (driftBps >= b.thresholdBps && poolForPair(pools, quote.mint, a.mint)) return true;
   }
   return false;
 }
 
-/** Real: swap each off-target asset vs the quote on Raydium (one tx per asset). */
+/** Real: swap each off-target asset vs the quote on Raydium (one tx per asset). Each leg
+ *  is sized to its absolute NAV share on-chain, so a single pass converges — no repeated
+ *  rebalances per deposit. Balances are re-read fresh per leg since an earlier leg's swap
+ *  moves both that asset's vault and the shared quote vault. */
 async function rebalanceReal(
   conn: Connection,
   program: Program<MiniSymmetry>,
@@ -79,7 +85,8 @@ async function rebalanceReal(
   b: OnchainBasket,
   pools: PoolsConfig,
 ): Promise<void> {
-  const prices = await latestPricesMicro(b.assets.map((a) => a.feed));
+  const feeds = b.assets.map((a) => a.feed);
+  const prices = await latestPricesMicro(feeds);
   const qi = b.quoteIndex;
   const quote = b.assets[qi]!;
   const cpmm = pk(pools.cpmmProgram);
@@ -87,26 +94,26 @@ async function rebalanceReal(
   for (let i = 0; i < b.assets.length; i++) {
     if (i === qi) continue;
     const a = b.assets[i]!;
-    // Re-read both vaults fresh per leg: an earlier leg's swap mutates the quote vault,
-    // so a once-read snapshot would size later deltas on stale balances.
-    const [balI, balQ] = await Promise.all([rawBalance(conn, pk(b.vaults[i]!)), rawBalance(conn, pk(b.vaults[qi]!))]);
-    const valueI = (Number(balI) / 10 ** a.decimals) * ((prices[a.feed] ?? 0) / 1e6);
-    const vq = (Number(balQ) / 10 ** quote.decimals) * ((prices[quote.feed] ?? 0) / 1e6);
-    if (vq <= 0) continue;
-    const lhs = valueI * quote.weightBps;
-    const rhs = a.weightBps * vq;
-    const denom = Math.max(lhs, rhs);
-    const driftBps = denom > 0 ? (Math.abs(lhs - rhs) / denom) * 10000 : 0;
-    if (driftBps < b.thresholdBps) continue;
     const pool = poolForPair(pools, quote.mint, a.mint);
     if (!pool) continue;
-    const buy = rhs > lhs;
+    // Re-read ALL vaults fresh per leg, recompute NAV: an earlier leg's swap mutated the
+    // quote vault, so a stale snapshot would mis-size this leg's NAV-share target.
+    const balances = await Promise.all(b.vaults.map((v) => rawBalance(conn, pk(v))));
+    const values = legValues(b, balances, prices);
+    const nav = values.reduce((s, v) => s + v, 0);
+    if (nav <= 0) continue;
+    const target = (nav * a.weightBps) / 10000;
+    const valueI = values[i]!;
+    const denom = Math.max(valueI, target);
+    const driftBps = denom > 0 ? (Math.abs(valueI - target) / denom) * 10000 : 0;
+    if (driftBps < b.thresholdBps) continue;
+    const buy = target > valueI; // under-weight vs NAV share -> buy with quote
     console.log(`  → ${buy ? "BUY" : "SELL"} ${a.key.toUpperCase()} on Raydium (drift ${(driftBps / 100).toFixed(2)}%)…`);
-    const sigs = await sendWithPyth(conn, admin, [a.feed, quote.feed], (priceFor) =>
+    const sigs = await sendWithPyth(conn, admin, feeds, (priceFor) =>
       program.methods
         .rebalanceOne(i)
         .accountsPartial({ basket: b.pubkey, keeper: admin.publicKey })
-        .remainingAccounts(rebalanceOneRemaining(b.pubkey, a, quote, pool, buy, priceFor, cpmm))
+        .remainingAccounts(rebalanceOneRemaining(b.pubkey, b.assets, a, quote, pool, buy, priceFor, cpmm))
         .instruction(),
     );
     console.log("  ✅", explorer("tx", sigs[sigs.length - 1]!));

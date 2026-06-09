@@ -101,11 +101,12 @@ export function PrismProvider({ children }: { children: ReactNode }) {
 
   const dismissToast = useCallback((id: number) => setToasts((cur) => cur.filter((t) => t.id !== id)), []);
 
-  // Pyth-consuming actions sign 2 txs (post on-chain prices, then the action).
-  // Toast each wallet prompt so the double approval isn't a surprise.
+  // Pyth-consuming actions sign ALL txs in ONE wallet prompt (signAllTransactions),
+  // then we broadcast them in order. This fires during the send loop — AFTER the
+  // single approval — so it's a send/confirm progress bar, not extra approvals.
   const stepToast = (action: string) => (step: number, total: number) => {
     if (total <= 1) return;
-    pushToast("info", `Approve ${step} of ${total} in your wallet`, step < total ? "posting live Pyth prices on-chain" : action);
+    pushToast("info", `Sending ${step} of ${total} on-chain`, step < total ? "posting live Pyth prices" : action);
   };
 
   const tokenBal = useCallback(
